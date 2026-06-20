@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 
+import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { RequirePermission } from '@/features/auth/components/require-permission';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
@@ -12,8 +13,13 @@ import { UnauthorizedPage } from '@/pages/unauthorized-page';
 
 export const appRouter = createBrowserRouter([
   {
-    path: '/login',
-    element: <LoginPage />,
+    element: <PublicOnlyRoute />,
+    children: [
+      {
+        path: '/login',
+        element: <LoginPage />,
+      },
+    ],
   },
   {
     element: <RequireAuth />,
@@ -42,7 +48,7 @@ export const appRouter = createBrowserRouter([
                   description="Daftar pasien akan dibangun setelah kontrak Patient API tersedia."
                   requiredPermission={PERMISSIONS.PATIENTS_LIST}
                   actionPermission={PERMISSIONS.PATIENTS_CREATE}
-                  actionDescription="User dapat melihat action Tambah Pasien ketika Patient Domain mulai dibuat."
+                  actionDescription="User memiliki izin untuk menambahkan pasien."
                 />
               </RequirePermission>
             ),
@@ -53,7 +59,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.SCREENINGS_LIST}>
                 <ModulePreviewPage
                   title="Skrining"
-                  description="Directory skrining akan menggunakan permission dari Laravel API."
+                  description="Directory skrining menggunakan permission dari Laravel API."
                   requiredPermission={PERMISSIONS.SCREENINGS_LIST}
                   actionPermission={PERMISSIONS.SCREENINGS_CREATE}
                   actionDescription="User memiliki izin untuk membuat skrining baru."
@@ -67,7 +73,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.HISTORY_VIEW_OWN}>
                 <ModulePreviewPage
                   title="Riwayat"
-                  description="Untuk Nurse, backend harus membatasi hasil hanya pada data miliknya sendiri."
+                  description="Backend wajib membatasi riwayat Nurse hanya pada data miliknya."
                   requiredPermission={PERMISSIONS.HISTORY_VIEW_OWN}
                 />
               </RequirePermission>
@@ -79,10 +85,10 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.REPORTS_VIEW}>
                 <ModulePreviewPage
                   title="Laporan"
-                  description="Laporan pasien akan tersedia setelah Patient, Screening, dan Monitoring Domain selesai."
+                  description="Laporan pasien mengikuti permission yang dikirim backend."
                   requiredPermission={PERMISSIONS.REPORTS_VIEW}
                   actionPermission={PERMISSIONS.REPORTS_EXPORT}
-                  actionDescription="User memiliki izin untuk mengekspor rekap laporan."
+                  actionDescription="User memiliki izin untuk mengekspor laporan."
                 />
               </RequirePermission>
             ),
@@ -93,7 +99,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.PROFILE_VIEW}>
                 <ModulePreviewPage
                   title="Profil"
-                  description="Halaman profil akan menampilkan informasi user dari endpoint GET /api/me."
+                  description="Profil menggunakan data user dari endpoint GET /api/me."
                   requiredPermission={PERMISSIONS.PROFILE_VIEW}
                 />
               </RequirePermission>
@@ -105,7 +111,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}>
                 <ModulePreviewPage
                   title="Ganti Password"
-                  description="Form ganti password akan menggunakan endpoint PATCH /api/me/password."
+                  description="Form akan menggunakan endpoint PATCH /api/me/password."
                   requiredPermission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}
                 />
               </RequirePermission>
@@ -117,10 +123,10 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.STUDENTS_LIST}>
                 <ModulePreviewPage
                   title="Data Mahasiswa"
-                  description="Route ini hanya dapat dibuka oleh user yang memiliki permission students.list."
+                  description="Route hanya dapat dibuka oleh user dengan students.list."
                   requiredPermission={PERMISSIONS.STUDENTS_LIST}
                   actionPermission={PERMISSIONS.STUDENTS_CREATE}
-                  actionDescription="User dapat menambahkan akun mahasiswa atau Nurse."
+                  actionDescription="User memiliki izin untuk menambahkan akun mahasiswa."
                 />
               </RequirePermission>
             ),

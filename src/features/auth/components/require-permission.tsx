@@ -27,7 +27,16 @@ export function RequirePermission({ children, permission }: RequirePermissionPro
   }
 
   if (!hasPermission(user, permission)) {
-    return <Navigate to="/unauthorized" replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        replace
+        state={{
+          from: `${location.pathname}${location.search}`,
+          requiredPermission: permission,
+        }}
+      />
+    );
   }
 
   return children;

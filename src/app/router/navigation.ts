@@ -7,7 +7,7 @@ import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import type { SvgIconProps } from '@mui/material/SvgIcon';
 import type { ElementType } from 'react';
 
-import { PERMISSIONS } from '@/features/auth/constants/permissions';
+import { PERMISSIONS, type Permission } from '@/features/auth/constants/permissions';
 import { hasPermission } from '@/features/auth/lib/authorization';
 import type { AuthUser } from '@/features/auth/types/auth.types';
 
@@ -16,7 +16,13 @@ export interface AppNavigationItem {
   label: string;
   to: string;
   icon: ElementType<SvgIconProps>;
-  permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+  permission: Permission;
+  end?: boolean;
+}
+
+interface ProtectedRouteRule {
+  path: string;
+  permission: Permission;
   end?: boolean;
 }
 
@@ -66,11 +72,43 @@ export const APP_NAVIGATION: readonly AppNavigationItem[] = [
   },
 ];
 
+const protectedRouteRules: readonly ProtectedRouteRule[] = [
+  {
+    path: '/profile/change-password',
+    permission: PERMISSIONS.PROFILE_CHANGE_PASSWORD,
+    end: true,
+  },
+  {
+    path: '/profile',
+    permission: PERMISSIONS.PROFILE_VIEW,
+    end: true,
+  },
+  ...APP_NAVIGATION.map((item) => ({
+    path: item.to,
+    permission: item.permission,
+    end: item.end,
+  })),
+];
+
 const pageTitles: Record<string, string> = {
   '/profile': 'Profil',
   '/profile/change-password': 'Ganti Password',
   '/unauthorized': 'Akses Ditolak',
 };
+
+function getPathname(path: string) {
+  const [pathname] = path.split(/[?#]/);
+
+  return pathname || '/';
+}
+
+function matchesRoute(pathname: string, rule: ProtectedRouteRule) {
+  if (rule.end) {
+    return pathname === rule.path;
+  }
+
+  return pathname === rule.path || pathname.startsWith(`${rule.path}/`);
+}
 
 export function getAllowedNavigationItems(user: AuthUser) {
   return APP_NAVIGATION.filter((item) => hasPermission(user, item.permission));
@@ -88,4 +126,28 @@ export function getPageTitle(pathname: string) {
   );
 
   return navigationItem?.label ?? 'MaternityCare';
+}
+
+export function getDefaultAuthenticatedPath(user: AuthUser) {
+  return getAllowedNavigationItems(user)[0]?.to ?? '/unauthorized';
+}
+
+export function canAccessProtectedPath(user: AuthUser, path: string) {
+  const pathname = getPathname(path);
+
+  const routeRule = protectedRouteRules.find((rule) => matchesRoute(pathname, rule));
+
+  if (!routeRule) {
+    return false;
+  }
+
+  return hasPermission(user, routeRule.permission);
+}
+
+export function resolvePostLoginPath(user: AuthUser, requestedPath?: string) {
+  if (requestedPath?.startsWith('/') && canAccessProtectedPath(user, requestedPath)) {
+    return requestedPath;
+  }
+
+  return getDefaultAuthenticatedPath(user);
 }
