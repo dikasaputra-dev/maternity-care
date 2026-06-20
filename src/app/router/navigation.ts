@@ -37,6 +37,13 @@ export const APP_NAVIGATION: readonly AppNavigationItem[] = [
     permission: PERMISSIONS.PATIENTS_LIST,
   },
   {
+    id: 'students',
+    label: 'Mahasiswa',
+    to: '/admin/students',
+    icon: SchoolOutlinedIcon,
+    permission: PERMISSIONS.STUDENTS_LIST,
+  },
+  {
     id: 'screenings',
     label: 'Skrining',
     to: '/screenings',
@@ -56,13 +63,6 @@ export const APP_NAVIGATION: readonly AppNavigationItem[] = [
     to: '/reports',
     icon: DescriptionOutlinedIcon,
     permission: PERMISSIONS.REPORTS_VIEW,
-  },
-  {
-    id: 'students',
-    label: 'Data Mahasiswa',
-    to: '/admin/students',
-    icon: SchoolOutlinedIcon,
-    permission: PERMISSIONS.STUDENTS_LIST,
   },
 ];
 

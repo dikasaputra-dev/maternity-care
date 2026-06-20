@@ -7,22 +7,18 @@ import { Sidebar, type SidebarNavigationItem } from '@/components/layout/sidebar
 interface AppLayoutProps {
   title: string;
   user: ProfileUser;
-  navigationItems: SidebarNavigationItem[];
-  activeItemId: string;
+  navigationItems: readonly SidebarNavigationItem[];
   children: ReactNode;
-  onNavigate: (itemId: string) => void;
   onProfile: () => void;
   onChangePassword: () => void;
   onLogout: () => void;
 }
 
 export function AppLayout({
-  activeItemId,
   children,
   navigationItems,
   onChangePassword,
   onLogout,
-  onNavigate,
   onProfile,
   title,
   user,
@@ -33,9 +29,7 @@ export function AppLayout({
     <div className="min-h-screen bg-surface">
       <Sidebar
         items={navigationItems}
-        activeItemId={activeItemId}
         mobileOpen={mobileSidebarOpen}
-        onNavigate={onNavigate}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
 

@@ -73,9 +73,9 @@ export function ProfileDropdown({
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((current) => !current)}
-        className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+        className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
           {initials}
         </span>
 
@@ -90,12 +90,12 @@ export function ProfileDropdown({
         <div
           id={menuId}
           role="menu"
-          className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
+          className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-xl border border-brand-100 bg-white shadow-lg"
         >
-          <div className="border-b border-slate-200 px-4 py-3">
+          <div className="border-b border-brand-100 px-4 py-3">
             <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
 
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-brand-600">
               {user.role}
             </p>
           </div>
@@ -105,7 +105,7 @@ export function ProfileDropdown({
               type="button"
               role="menuitem"
               onClick={() => runAction(onProfile)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <PersonOutlineIcon aria-hidden="true" fontSize="small" />
               Profil
@@ -115,14 +115,14 @@ export function ProfileDropdown({
               type="button"
               role="menuitem"
               onClick={() => runAction(onChangePassword)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <KeyOutlinedIcon aria-hidden="true" fontSize="small" />
               Ganti Password
             </button>
           </div>
 
-          <div className="border-t border-slate-200 p-2">
+          <div className="border-t border-brand-100 p-2">
             <button
               type="button"
               role="menuitem"
