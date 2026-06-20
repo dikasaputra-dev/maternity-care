@@ -13,7 +13,7 @@ export const apiAuthService: AuthService = {
     try {
       const response = await postNurseLogin(payload);
 
-      return mapLoginResponse(response);
+      return mapLoginResponse(response, 'nurse');
     } catch (error: unknown) {
       throw toApiError(error);
     }
@@ -23,7 +23,7 @@ export const apiAuthService: AuthService = {
     try {
       const response = await postAdminLogin(payload);
 
-      return mapLoginResponse(response);
+      return mapLoginResponse(response, 'admin');
     } catch (error: unknown) {
       throw toApiError(error);
     }

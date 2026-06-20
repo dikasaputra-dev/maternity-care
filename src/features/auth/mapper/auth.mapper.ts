@@ -50,7 +50,7 @@ function mapAuthUser(value: unknown): AuthUser {
     throw new Error('Invalid authenticated user response.');
   }
 
-  if (typeof value.id !== 'number') {
+  if (typeof value.id !== 'number' || !Number.isInteger(value.id)) {
     throw new Error('Invalid authenticated user ID.');
   }
 
@@ -64,22 +64,29 @@ function mapAuthUser(value: unknown): AuthUser {
   };
 }
 
-export function mapLoginResponse(value: unknown): AuthSession {
+export function mapLoginResponse(value: unknown, expectedRole: AuthRole): AuthSession {
   if (!isRecord(value) || !isRecord(value.data)) {
     throw new Error('Invalid login response.');
   }
 
   const token = readRequiredString(value.data, 'token');
+
   const tokenType = readRequiredString(value.data, 'token_type');
 
   if (tokenType !== 'Bearer') {
     throw new Error('Unsupported authentication token type.');
   }
 
+  const user = mapAuthUser(value.data.user);
+
+  if (user.role !== expectedRole) {
+    throw new Error('The authenticated account role does not match the selected login type.');
+  }
+
   return {
     accessToken: token,
     tokenType: 'Bearer',
-    user: mapAuthUser(value.data.user),
+    user,
   };
 }
 
