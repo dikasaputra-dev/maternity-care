@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 
+import { ApiError } from '@/api/api-error';
 import { AuthContext } from '@/features/auth/context/auth-context';
+import { subscribeToUnauthorizedSession } from '@/features/auth/lib/auth-events';
 import {
   clearAuthSession,
   readAuthSession,
@@ -10,12 +12,33 @@ import { authService } from '@/features/auth/services/auth.service';
 import type {
   AdminLoginPayload,
   AuthSession,
+  AuthUser,
   NurseLoginPayload,
 } from '@/features/auth/types/auth.types';
 
+const SESSION_EXPIRED_MESSAGE = 'Sesi Anda telah berakhir. Silakan masuk kembali.';
+
+const SESSION_VERIFICATION_MESSAGE = 'Sesi tidak dapat diverifikasi. Silakan masuk kembali.';
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthSession | null>(() => readAuthSession());
+
   const [isInitializing, setIsInitializing] = useState(true);
+
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
+
+  const clearAuthNotice = useCallback(() => {
+    setAuthNotice(null);
+  }, []);
+
+  useEffect(() => {
+    return subscribeToUnauthorizedSession(() => {
+      clearAuthSession();
+      setSession(null);
+      setIsInitializing(false);
+      setAuthNotice(SESSION_EXPIRED_MESSAGE);
+    });
+  }, []);
 
   const refreshUser = useCallback(async () => {
     const storedSession = readAuthSession();
@@ -26,15 +49,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    const user = await authService.getCurrentUser();
+    try {
+      const user = await authService.getCurrentUser();
 
-    const nextSession: AuthSession = {
-      ...storedSession,
-      user,
-    };
+      const nextSession: AuthSession = {
+        ...storedSession,
+        user,
+      };
 
-    writeAuthSession(nextSession);
-    setSession(nextSession);
+      writeAuthSession(nextSession);
+      setSession(nextSession);
+    } catch (error: unknown) {
+      clearAuthSession();
+      setSession(null);
+
+      if (!(error instanceof ApiError && error.status === 401)) {
+        setAuthNotice(SESSION_VERIFICATION_MESSAGE);
+      }
+
+      throw error;
+    }
   }, []);
 
   useEffect(() => {
@@ -66,11 +100,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         writeAuthSession(nextSession);
         setSession(nextSession);
-      } catch {
+      } catch (error: unknown) {
         clearAuthSession();
 
-        if (isActive) {
-          setSession(null);
+        if (!isActive) {
+          return;
+        }
+
+        setSession(null);
+
+        if (!(error instanceof ApiError && error.status === 401)) {
+          setAuthNotice(SESSION_VERIFICATION_MESSAGE);
         }
       } finally {
         if (isActive) {
@@ -86,28 +126,38 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  const loginAsNurse = useCallback(async (payload: NurseLoginPayload) => {
+  const loginAsNurse = useCallback(async (payload: NurseLoginPayload): Promise<AuthUser> => {
+    setAuthNotice(null);
+
     const nextSession = await authService.loginNurse(payload);
 
     writeAuthSession(nextSession);
     setSession(nextSession);
+
+    return nextSession.user;
   }, []);
 
-  const loginAsAdmin = useCallback(async (payload: AdminLoginPayload) => {
+  const loginAsAdmin = useCallback(async (payload: AdminLoginPayload): Promise<AuthUser> => {
+    setAuthNotice(null);
+
     const nextSession = await authService.loginAdmin(payload);
 
     writeAuthSession(nextSession);
     setSession(nextSession);
+
+    return nextSession.user;
   }, []);
 
   const logout = useCallback(async () => {
     try {
       await authService.logout();
     } catch {
-      // Local session must still be cleared when the server is unavailable.
+      // Local session must still be removed
+      // when the API cannot be reached.
     } finally {
       clearAuthSession();
       setSession(null);
+      setAuthNotice(null);
     }
   }, []);
 
@@ -117,12 +167,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
       user: session?.user ?? null,
       isAuthenticated: session !== null,
       isInitializing,
+      authNotice,
       loginAsNurse,
       loginAsAdmin,
       refreshUser,
       logout,
+      clearAuthNotice,
     }),
-    [isInitializing, loginAsAdmin, loginAsNurse, logout, refreshUser, session],
+    [
+      authNotice,
+      clearAuthNotice,
+      isInitializing,
+      loginAsAdmin,
+      loginAsNurse,
+      logout,
+      refreshUser,
+      session,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

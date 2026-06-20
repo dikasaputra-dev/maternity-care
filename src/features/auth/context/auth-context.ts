@@ -12,10 +12,12 @@ export interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
-  loginAsNurse: (payload: NurseLoginPayload) => Promise<void>;
-  loginAsAdmin: (payload: AdminLoginPayload) => Promise<void>;
+  authNotice: string | null;
+  loginAsNurse: (payload: NurseLoginPayload) => Promise<AuthUser>;
+  loginAsAdmin: (payload: AdminLoginPayload) => Promise<AuthUser>;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  clearAuthNotice: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
