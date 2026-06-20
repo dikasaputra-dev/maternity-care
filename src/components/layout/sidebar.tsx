@@ -1,10 +1,10 @@
 import CloseIcon from '@mui/icons-material/Close';
-import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
 import type { SvgIconProps } from '@mui/material/SvgIcon';
 import type { ElementType } from 'react';
 import { NavLink } from 'react-router';
 
 import { cn } from '@/lib/cn';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 export interface SidebarNavigationItem {
   id: string;
@@ -31,9 +31,7 @@ function SidebarPanel({ items, onClose, showCloseButton = false }: SidebarPanelP
     <div className="flex h-full flex-col bg-white text-slate-900">
       <div className="flex min-h-16 items-center justify-between border-b border-brand-100 px-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-brand-400 to-brand-300 text-brand-950 shadow-sm">
-            <MonitorHeartOutlinedIcon aria-hidden="true" fontSize="small" />
-          </span>
+          <BrandLogo className="h-10 w-10 shrink-0" />
 
           <div>
             <p className="text-sm font-semibold text-slate-900">MaternityCare</p>
