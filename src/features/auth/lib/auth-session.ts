@@ -1,8 +1,7 @@
-import { ALL_PERMISSIONS, type Permission } from '@/features/auth/constants/permissions';
+import { isPermission } from '@/features/auth/constants/permissions';
 import type { AuthRole, AuthSession, AuthUser } from '@/features/auth/types/auth.types';
 
 const AUTH_SESSION_KEY = 'maternity-care.auth-session';
-const permissionValues = new Set<string>(ALL_PERMISSIONS);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -14,10 +13,6 @@ function isNullableString(value: unknown): value is string | null {
 
 function isAuthRole(value: unknown): value is AuthRole {
   return value === 'nurse' || value === 'admin';
-}
-
-function isPermission(value: unknown): value is Permission {
-  return typeof value === 'string' && permissionValues.has(value);
 }
 
 function isAuthUser(value: unknown): value is AuthUser {
@@ -41,7 +36,9 @@ function isAuthSession(value: unknown): value is AuthSession {
     return false;
   }
 
-  return typeof value.token === 'string' && value.token_type === 'Bearer' && isAuthUser(value.user);
+  return (
+    typeof value.accessToken === 'string' && value.tokenType === 'Bearer' && isAuthUser(value.user)
+  );
 }
 
 export function readAuthSession(): AuthSession | null {
@@ -56,12 +53,14 @@ export function readAuthSession(): AuthSession | null {
 
     if (!isAuthSession(parsedSession)) {
       sessionStorage.removeItem(AUTH_SESSION_KEY);
+
       return null;
     }
 
     return parsedSession;
   } catch {
     sessionStorage.removeItem(AUTH_SESSION_KEY);
+
     return null;
   }
 }

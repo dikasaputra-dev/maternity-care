@@ -1,9 +1,7 @@
+import { ApiError } from '@/api/api-error';
 import { MOCK_ADMIN_USER, MOCK_NURSE_USER } from '@/features/auth/mocks/auth-users.mock';
-import type {
-  AdminLoginPayload,
-  LoginResponse,
-  NurseLoginPayload,
-} from '@/features/auth/types/auth.types';
+import { readAuthSession } from '@/features/auth/lib/auth-session';
+import type { AuthService } from '@/features/auth/services/auth.service';
 
 const MOCK_PASSWORD = 'password';
 const MOCK_NURSE_NIM = '251FK05002';
@@ -23,47 +21,52 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
+export const mockAuthService: AuthService = {
+  async loginNurse(payload) {
+    await wait(400);
 
-export async function loginNurse(payload: NurseLoginPayload): Promise<LoginResponse> {
-  await wait(400);
+    const normalizedNim = normalizeNim(payload.nim);
 
-  const normalizedNim = normalizeNim(payload.nim);
+    if (normalizedNim !== MOCK_NURSE_NIM || payload.password !== MOCK_PASSWORD) {
+      throw new ApiError('Kredensial tidak valid.', 422);
+    }
 
-  if (normalizedNim !== MOCK_NURSE_NIM || payload.password !== MOCK_PASSWORD) {
-    throw new AuthenticationError('NIM atau password tidak valid.');
-  }
-
-  return {
-    message: 'Login successful.',
-    data: {
-      token: 'mock-nurse-bearer-token',
-      token_type: 'Bearer',
+    return {
+      accessToken: 'mock-nurse-bearer-token',
+      tokenType: 'Bearer',
       user: MOCK_NURSE_USER,
-    },
-  };
-}
+    };
+  },
 
-export async function loginAdmin(payload: AdminLoginPayload): Promise<LoginResponse> {
-  await wait(400);
+  async loginAdmin(payload) {
+    await wait(400);
 
-  const normalizedEmail = normalizeEmail(payload.email);
+    const normalizedEmail = normalizeEmail(payload.email);
 
-  if (normalizedEmail !== MOCK_ADMIN_EMAIL || payload.password !== MOCK_PASSWORD) {
-    throw new AuthenticationError('Email atau password tidak valid.');
-  }
+    if (normalizedEmail !== MOCK_ADMIN_EMAIL || payload.password !== MOCK_PASSWORD) {
+      throw new ApiError('Kredensial tidak valid.', 422);
+    }
 
-  return {
-    message: 'Login successful.',
-    data: {
-      token: 'mock-admin-bearer-token',
-      token_type: 'Bearer',
+    return {
+      accessToken: 'mock-admin-bearer-token',
+      tokenType: 'Bearer',
       user: MOCK_ADMIN_USER,
-    },
-  };
-}
+    };
+  },
+
+  async getCurrentUser() {
+    await wait(200);
+
+    const session = readAuthSession();
+
+    if (!session) {
+      throw new ApiError('Unauthenticated.', 401);
+    }
+
+    return session.user;
+  },
+
+  async logout() {
+    await wait(150);
+  },
+};
