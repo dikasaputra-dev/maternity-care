@@ -66,7 +66,7 @@ export function DesignSystemPage({ systemMessage }: DesignSystemPageProps) {
 
         <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-teal-700">Phase 1 Preview</p>
+            <p className="text-sm font-semibold text-brand-700">Phase 1 Preview</p>
 
             <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
               Design System dan Layout

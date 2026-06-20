@@ -38,7 +38,7 @@ function SidebarPanel({
     <div className="flex h-full flex-col bg-slate-950 text-white">
       <div className="flex min-h-16 items-center justify-between border-b border-slate-800 px-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600">
             <MonitorHeartOutlinedIcon aria-hidden="true" fontSize="small" />
           </span>
 
@@ -53,7 +53,7 @@ function SidebarPanel({
             type="button"
             aria-label="Tutup navigasi"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+            className="rounded-lg p-2 text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <CloseIcon aria-hidden="true" fontSize="small" />
           </button>
@@ -76,9 +76,9 @@ function SidebarPanel({
               }}
               className={cn(
                 'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                 isActive
-                  ? 'bg-teal-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'text-slate-300 hover:bg-slate-900 hover:text-white',
               )}
             >

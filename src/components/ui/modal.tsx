@@ -81,7 +81,7 @@ export function Modal({ children, description, footer, onClose, open, title }: M
             type="button"
             aria-label="Tutup modal"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700"
+            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
           >
             <CloseIcon aria-hidden="true" fontSize="small" />
           </button>

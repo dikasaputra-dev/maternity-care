@@ -63,7 +63,7 @@ export function Input({
         className={cn(
           'min-h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none',
           'placeholder:text-slate-400',
-          'focus:border-teal-700 focus:ring-2 focus:ring-teal-100',
+          'focus:border-brand-700 focus:ring-2 focus:ring-brand-100',
           'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500',
           error ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : 'border-slate-300',
           className,
@@ -111,7 +111,7 @@ export function Select({
         aria-describedby={hasMessage ? messageId : undefined}
         className={cn(
           'min-h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none',
-          'focus:border-teal-700 focus:ring-2 focus:ring-teal-100',
+          'focus:border-brand-700 focus:ring-2 focus:ring-brand-100',
           'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500',
           error ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : 'border-slate-300',
           className,
@@ -162,7 +162,7 @@ export function Textarea({
         className={cn(
           'w-full resize-y rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 outline-none',
           'placeholder:text-slate-400',
-          'focus:border-teal-700 focus:ring-2 focus:ring-teal-100',
+          'focus:border-brand-700 focus:ring-2 focus:ring-brand-100',
           'disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500',
           error ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : 'border-slate-300',
           className,
@@ -200,8 +200,8 @@ export function Checkbox({
         type="checkbox"
         aria-describedby={descriptionId}
         className={cn(
-          'mt-0.5 h-5 w-5 rounded border-slate-300 accent-teal-700',
-          'focus:ring-2 focus:ring-teal-200 focus:ring-offset-1',
+          'mt-0.5 h-5 w-5 rounded border-slate-300 accent-brand-700',
+          'focus:ring-2 focus:ring-brand-200 focus:ring-offset-1',
           'disabled:cursor-not-allowed disabled:opacity-60',
           className,
         )}

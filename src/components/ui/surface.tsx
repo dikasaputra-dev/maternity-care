@@ -19,7 +19,7 @@ export function Card({ children, className, padding = 'md', ...props }: CardProp
     <div
       {...props}
       className={cn(
-        'rounded-xl border border-slate-200 bg-white shadow-sm',
+        'rounded-xl border border-brand-100 bg-white shadow-sm',
         cardPaddingClasses[padding],
         className,
       )}
@@ -40,7 +40,7 @@ const badgeToneClasses: Record<BadgeTone, string> = {
   success: 'bg-emerald-100 text-emerald-800',
   warning: 'bg-amber-100 text-amber-800',
   danger: 'bg-red-100 text-red-800',
-  info: 'bg-sky-100 text-sky-800',
+  info: 'bg-brand-100 text-brand-800',
 };
 
 export function Badge({ children, className, tone = 'neutral', ...props }: BadgeProps) {

@@ -73,9 +73,9 @@ export function ProfileDropdown({
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((current) => !current)}
-        className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700"
+        className="flex items-center gap-2 rounded-lg p-1.5 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-700 text-sm font-semibold text-white">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-700 text-sm font-semibold text-white">
           {initials}
         </span>
 
@@ -105,7 +105,7 @@ export function ProfileDropdown({
               type="button"
               role="menuitem"
               onClick={() => runAction(onProfile)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
             >
               <PersonOutlineIcon aria-hidden="true" fontSize="small" />
               Profil
@@ -115,7 +115,7 @@ export function ProfileDropdown({
               type="button"
               role="menuitem"
               onClick={() => runAction(onChangePassword)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700"
             >
               <KeyOutlinedIcon aria-hidden="true" fontSize="small" />
               Ganti Password
