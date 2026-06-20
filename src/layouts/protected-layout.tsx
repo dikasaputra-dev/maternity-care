@@ -24,12 +24,16 @@ export function ProtectedLayout() {
     void navigate('/profile/change-password');
   }
 
-  function handleLogout() {
-    logout();
+  async function performLogout() {
+    await logout();
 
-    void navigate('/login', {
+    await navigate('/login', {
       replace: true,
     });
+  }
+
+  function handleLogout() {
+    void performLogout();
   }
 
   return (

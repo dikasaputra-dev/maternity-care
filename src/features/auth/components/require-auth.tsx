@@ -1,10 +1,15 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
 
+import { AuthLoadingScreen } from '@/features/auth/components/auth-loading-screen';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
 export function RequireAuth() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
   const location = useLocation();
+
+  if (isInitializing) {
+    return <AuthLoadingScreen />;
+  }
 
   if (!isAuthenticated) {
     const redirectPath = `${location.pathname}${location.search}`;

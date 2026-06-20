@@ -11,9 +11,11 @@ export interface AuthContextValue {
   session: AuthSession | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isInitializing: boolean;
   loginAsNurse: (payload: NurseLoginPayload) => Promise<void>;
   loginAsAdmin: (payload: AdminLoginPayload) => Promise<void>;
-  logout: () => void;
+  refreshUser: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
