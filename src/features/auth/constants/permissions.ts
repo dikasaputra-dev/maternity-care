@@ -65,3 +65,9 @@ export const NURSE_PERMISSIONS: readonly Permission[] = [
 ];
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS) as Permission[];
+
+const permissionValues = new Set<string>(ALL_PERMISSIONS);
+
+export function isPermission(value: unknown): value is Permission {
+  return typeof value === 'string' && permissionValues.has(value);
+}

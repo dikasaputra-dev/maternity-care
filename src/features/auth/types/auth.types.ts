@@ -12,8 +12,8 @@ export interface AuthUser {
 }
 
 export interface AuthSession {
-  token: string;
-  token_type: 'Bearer';
+  accessToken: string;
+  tokenType: 'Bearer';
   user: AuthUser;
 }
 
@@ -25,9 +25,4 @@ export interface NurseLoginPayload {
 export interface AdminLoginPayload {
   email: string;
   password: string;
-}
-
-export interface LoginResponse {
-  message: string;
-  data: AuthSession;
 }
