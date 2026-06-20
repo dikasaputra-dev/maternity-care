@@ -1,13 +1,44 @@
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
+import { getDefaultAuthenticatedPath } from '@/app/router/navigation';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+
+interface UnauthorizedLocationState {
+  from?: string;
+  requiredPermission?: string;
+}
 
 export function UnauthorizedPage() {
+  const { logout, user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  function handleBackToDashboard() {
-    void navigate('/dashboard');
+  const state = location.state as UnauthorizedLocationState | null;
+
+  const defaultPath = user ? getDefaultAuthenticatedPath(user) : '/login';
+
+  const hasAvailablePage = defaultPath !== '/unauthorized';
+
+  async function performPrimaryAction() {
+    if (hasAvailablePage) {
+      await navigate(defaultPath, {
+        replace: true,
+      });
+
+      return;
+    }
+
+    await logout();
+
+    await navigate('/login', {
+      replace: true,
+    });
+  }
+
+  function handlePrimaryAction() {
+    void performPrimaryAction();
   }
 
   return (
@@ -25,8 +56,22 @@ export function UnauthorizedPage() {
           Akun yang sedang digunakan tidak memiliki permission untuk membuka halaman tersebut.
         </p>
 
-        <Button className="mt-6" onClick={handleBackToDashboard}>
-          Kembali ke Dashboard
+        {state?.requiredPermission ? (
+          <div className="mt-5 rounded-lg border border-red-100 bg-red-50/60 px-4 py-3 text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+              Permission dibutuhkan
+            </p>
+
+            <p className="mt-1 text-sm text-red-800">{state.requiredPermission}</p>
+
+            {state.from ? (
+              <p className="mt-2 break-all text-xs text-red-600">Route: {state.from}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <Button className="mt-6" onClick={handlePrimaryAction}>
+          {hasAvailablePage ? 'Buka Halaman yang Tersedia' : 'Keluar dari Akun'}
         </Button>
       </div>
     </div>

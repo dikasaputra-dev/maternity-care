@@ -2,16 +2,15 @@ import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutlined';
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { ApiError } from '@/api/api-error';
+import { resolvePostLoginPath } from '@/app/router/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/form-controls';
-import { AuthLoadingScreen } from '@/features/auth/components/auth-loading-screen';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import type { AuthRole } from '@/features/auth/types/auth.types';
+import type { AuthRole, AuthUser } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/cn';
-import { BrandLogo } from '@/components/brand/brand-logo';
 
 const NIM_PATTERN = /^\d{3}[A-Z]{2}\d{5}$/;
 
@@ -20,34 +19,43 @@ interface RedirectState {
 }
 
 export function LoginPage() {
-  const { isAuthenticated, isInitializing, loginAsAdmin, loginAsNurse } = useAuth();
+  const { authNotice, clearAuthNotice, loginAsAdmin, loginAsNurse } = useAuth();
 
   const location = useLocation();
   const navigate = useNavigate();
 
   const [accountType, setAccountType] = useState<AuthRole>('nurse');
+
   const [identifier, setIdentifier] = useState('251FK05002');
+
   const [password, setPassword] = useState('password');
+
   const [identifierError, setIdentifierError] = useState<string | undefined>();
+
   const [passwordError, setPasswordError] = useState<string | undefined>();
+
   const [formError, setFormError] = useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (isInitializing) {
-    return <AuthLoadingScreen />;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  function changeAccountType(role: AuthRole) {
-    setAccountType(role);
-    setIdentifier(role === 'nurse' ? '251FK05002' : 'admin@example.com');
-    setPassword('password');
+  function resetErrors() {
     setIdentifierError(undefined);
     setPasswordError(undefined);
     setFormError(null);
+    clearAuthNotice();
+  }
+
+  function changeAccountType(role: AuthRole) {
+    if (isSubmitting) {
+      return;
+    }
+
+    setAccountType(role);
+
+    setIdentifier(role === 'nurse' ? '251FK05002' : 'admin@example.com');
+
+    setPassword('password');
+    resetErrors();
   }
 
   function handleIdentifierChange(value: string) {
@@ -56,6 +64,7 @@ export function LoginPage() {
     setIdentifier(normalizedValue);
     setIdentifierError(undefined);
     setFormError(null);
+    clearAuthNotice();
   }
 
   function mapApiValidationError(error: ApiError) {
@@ -63,27 +72,49 @@ export function LoginPage() {
 
     const identifierMessage = error.validationErrors[identifierField]?.[0];
 
-    const passwordMessage = error.validationErrors.password?.[0];
+    const currentPasswordMessage = error.validationErrors.password?.[0];
 
     if (identifierMessage) {
       setIdentifierError(identifierMessage);
     }
 
-    if (passwordMessage) {
-      setPasswordError(passwordMessage);
+    if (currentPasswordMessage) {
+      setPasswordError(currentPasswordMessage);
     }
 
-    if (!identifierMessage && !passwordMessage) {
+    if (!identifierMessage && !currentPasswordMessage) {
       setFormError(error.message);
     }
+  }
+
+  async function authenticateUser() {
+    if (accountType === 'nurse') {
+      return loginAsNurse({
+        nim: identifier.trim(),
+        password,
+      });
+    }
+
+    return loginAsAdmin({
+      email: identifier.trim(),
+      password,
+    });
+  }
+
+  async function redirectAuthenticatedUser(user: AuthUser) {
+    const redirectState = location.state as RedirectState | null;
+
+    const destination = resolvePostLoginPath(user, redirectState?.from);
+
+    await navigate(destination, {
+      replace: true,
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    setIdentifierError(undefined);
-    setPasswordError(undefined);
-    setFormError(null);
+    resetErrors();
 
     const normalizedIdentifier = identifier.trim();
 
@@ -108,23 +139,9 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      if (accountType === 'nurse') {
-        await loginAsNurse({
-          nim: normalizedIdentifier,
-          password,
-        });
-      } else {
-        await loginAsAdmin({
-          email: normalizedIdentifier,
-          password,
-        });
-      }
+      const authenticatedUser = await authenticateUser();
 
-      const redirectState = location.state as RedirectState | null;
-
-      await navigate(redirectState?.from ?? '/dashboard', {
-        replace: true,
-      });
+      await redirectAuthenticatedUser(authenticatedUser);
     } catch (error: unknown) {
       if (error instanceof ApiError) {
         mapApiValidationError(error);
@@ -139,8 +156,10 @@ export function LoginPage() {
   return (
     <main className="grid min-h-screen bg-surface lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
       <section className="hidden bg-linear-to-br from-brand-50 via-white to-brand-100 p-12 lg:flex lg:flex-col lg:justify-between">
-        <div className="flex items-center gap-2">
-          <BrandLogo className="h-14 w-14" />
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-brand-400 to-brand-300 text-brand-950 shadow-sm">
+            <HealthAndSafetyOutlinedIcon aria-hidden="true" />
+          </span>
 
           <div>
             <p className="font-semibold text-slate-950">MaternityCare</p>
@@ -151,15 +170,15 @@ export function LoginPage() {
 
         <div className="max-w-xl">
           <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">
-            Maternal Risk Navigator
+            Clinical Workspace
           </p>
 
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">
-            Early Screenimg and Risk Detection for Maternal Care
+            Pendataan maternitas yang aman, terstruktur, dan mudah digunakan.
           </h1>
 
           <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">
-            Hak akses setiap pengguna mengikuti role dan permission yang diberikan oleh backend.
+            Hak akses pengguna mengikuti role dan permission yang dikirim oleh backend.
           </p>
         </div>
 
@@ -188,6 +207,15 @@ export function LoginPage() {
             </p>
           </div>
 
+          {authNotice ? (
+            <div
+              role="status"
+              className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+            >
+              {authNotice}
+            </div>
+          ) : null}
+
           <div
             role="tablist"
             aria-label="Jenis akun"
@@ -197,9 +225,11 @@ export function LoginPage() {
               type="button"
               role="tab"
               aria-selected={accountType === 'nurse'}
+              disabled={isSubmitting}
               onClick={() => changeAccountType('nurse')}
               className={cn(
                 'flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors',
+                'disabled:cursor-not-allowed disabled:opacity-60',
                 accountType === 'nurse'
                   ? 'bg-white text-brand-700 shadow-sm'
                   : 'text-slate-500 hover:text-brand-700',
@@ -213,9 +243,11 @@ export function LoginPage() {
               type="button"
               role="tab"
               aria-selected={accountType === 'admin'}
+              disabled={isSubmitting}
               onClick={() => changeAccountType('admin')}
               className={cn(
                 'flex min-h-11 items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors',
+                'disabled:cursor-not-allowed disabled:opacity-60',
                 accountType === 'admin'
                   ? 'bg-white text-brand-700 shadow-sm'
                   : 'text-slate-500 hover:text-brand-700',
@@ -236,6 +268,7 @@ export function LoginPage() {
               label={accountType === 'nurse' ? 'NIM' : 'Email'}
               type={accountType === 'nurse' ? 'text' : 'email'}
               value={identifier}
+              disabled={isSubmitting}
               onChange={(event) => handleIdentifierChange(event.target.value)}
               placeholder={
                 accountType === 'nurse' ? 'Contoh: 251FK05002' : 'Contoh: admin@example.com'
@@ -248,10 +281,12 @@ export function LoginPage() {
               label="Password"
               type="password"
               value={password}
+              disabled={isSubmitting}
               onChange={(event) => {
                 setPassword(event.target.value);
                 setPasswordError(undefined);
                 setFormError(null);
+                clearAuthNotice();
               }}
               placeholder="Masukkan password"
               autoComplete="current-password"
