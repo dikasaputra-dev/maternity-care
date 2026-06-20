@@ -59,6 +59,11 @@ svg {
   max-width: 100%;
 }
 
+::selection {
+  color: #134e4a;
+  background-color: #ccfbf1;
+}
+
 #root {
   min-height: 100vh;
 }

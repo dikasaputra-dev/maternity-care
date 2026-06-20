@@ -1,28 +1,88 @@
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import { useState } from 'react';
+
+import type { ProfileUser } from '@/components/layout/profile-dropdown';
+import type { SidebarNavigationItem } from '@/components/layout/sidebar';
+import { AppLayout } from '@/layouts/app-layout';
+import { DesignSystemPage } from '@/pages/design-system-page';
+
+const nurseNavigationItems: SidebarNavigationItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: DashboardOutlinedIcon,
+  },
+  {
+    id: 'patients',
+    label: 'Pasien',
+    icon: PeopleAltOutlinedIcon,
+  },
+  {
+    id: 'screenings',
+    label: 'Skrining',
+    icon: FactCheckOutlinedIcon,
+  },
+  {
+    id: 'history',
+    label: 'Riwayat',
+    icon: HistoryOutlinedIcon,
+  },
+  {
+    id: 'reports',
+    label: 'Laporan',
+    icon: DescriptionOutlinedIcon,
+  },
+];
+
+const previewUser: ProfileUser = {
+  name: 'Rina Nuraini',
+  role: 'Nurse',
+};
+
 export function App() {
+  const [activeItemId, setActiveItemId] = useState('dashboard');
+  const [systemMessage, setSystemMessage] = useState<string | null>(null);
+
+  const activeNavigationItem =
+    nurseNavigationItems.find((item) => item.id === activeItemId) ?? nurseNavigationItems[0];
+
+  function handleNavigate(itemId: string) {
+    const selectedItem = nurseNavigationItems.find((item) => item.id === itemId);
+
+    setActiveItemId(itemId);
+    setSystemMessage(
+      selectedItem
+        ? `Menu ${selectedItem.label} dipilih. Routing akan diintegrasikan pada Phase 2.`
+        : null,
+    );
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 py-12">
-      <section className="w-full max-w-2xl">
-        <p className="text-sm font-semibold tracking-wide text-teal-700">MaternityCare</p>
-
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-          Fondasi project berhasil disiapkan
-        </h1>
-
-        <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
-          React, TypeScript, Vite, Tailwind CSS, ESLint, Prettier, dan alias import sudah siap
-          digunakan.
-        </p>
-
-        <div className="mt-8 border-l-4 border-teal-600 bg-white px-5 py-4 shadow-sm">
-          <p className="text-sm font-medium text-slate-800">
-            Phase 0 — Project Initialization + Clean Foundation
-          </p>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Belum ada fitur autentikasi atau fitur klinis pada tahap ini.
-          </p>
-        </div>
-      </section>
-    </main>
+    <AppLayout
+      title={activeNavigationItem.label}
+      user={previewUser}
+      navigationItems={nurseNavigationItems}
+      activeItemId={activeItemId}
+      onNavigate={handleNavigate}
+      onProfile={() => {
+        setSystemMessage(
+          'Menu Profil dipilih. Halaman profil akan diintegrasikan pada phase berikutnya.',
+        );
+      }}
+      onChangePassword={() => {
+        setSystemMessage('Menu Ganti Password dipilih. Form akan dibuat bersama alur autentikasi.');
+      }}
+      onLogout={() => {
+        setSystemMessage(
+          'Aksi Logout dipilih. Session logout akan diimplementasikan pada Phase 2.',
+        );
+      }}
+    >
+      <DesignSystemPage systemMessage={systemMessage} />
+    </AppLayout>
   );
 }
