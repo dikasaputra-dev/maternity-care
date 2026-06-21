@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 
+import { APP_PATHS } from '@/app/router/route-metadata';
 import { AuthenticatedIndexRoute } from '@/features/auth/components/authenticated-index-route';
 import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
 import { RequireAuth } from '@/features/auth/components/require-auth';
@@ -19,7 +20,7 @@ export const appRouter = createBrowserRouter([
     element: <PublicOnlyRoute />,
     children: [
       {
-        path: '/login',
+        path: APP_PATHS.LOGIN,
         element: <LoginPage />,
       },
     ],
@@ -31,11 +32,11 @@ export const appRouter = createBrowserRouter([
         element: <ProtectedLayout />,
         children: [
           {
-            path: '/',
+            path: APP_PATHS.ROOT,
             element: <AuthenticatedIndexRoute />,
           },
           {
-            path: '/dashboard',
+            path: APP_PATHS.DASHBOARD,
             element: (
               <RequirePermission permission={PERMISSIONS.DASHBOARD_VIEW}>
                 <DashboardPage />
@@ -43,7 +44,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/patients',
+            path: APP_PATHS.PATIENTS,
             element: (
               <RequirePermission permission={PERMISSIONS.PATIENTS_LIST}>
                 <ModulePreviewPage
@@ -57,7 +58,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/screenings',
+            path: APP_PATHS.SCREENINGS,
             element: (
               <RequirePermission permission={PERMISSIONS.SCREENINGS_LIST}>
                 <ModulePreviewPage
@@ -71,7 +72,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/history',
+            path: APP_PATHS.HISTORY,
             element: (
               <RequirePermission permission={PERMISSIONS.HISTORY_VIEW_OWN}>
                 <ModulePreviewPage
@@ -83,7 +84,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/reports',
+            path: APP_PATHS.REPORTS,
             element: (
               <RequirePermission permission={PERMISSIONS.REPORTS_VIEW}>
                 <ModulePreviewPage
@@ -97,7 +98,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/profile',
+            path: APP_PATHS.PROFILE,
             element: (
               <RequirePermission permission={PERMISSIONS.PROFILE_VIEW}>
                 <ProfilePage />
@@ -105,7 +106,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/profile/change-password',
+            path: APP_PATHS.CHANGE_PASSWORD,
             element: (
               <RequirePermission permission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}>
                 <ChangePasswordPage />
@@ -113,7 +114,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/admin/students',
+            path: APP_PATHS.STUDENTS,
             element: (
               <RequirePermission permission={PERMISSIONS.STUDENTS_LIST}>
                 <ModulePreviewPage
@@ -127,7 +128,7 @@ export const appRouter = createBrowserRouter([
             ),
           },
           {
-            path: '/unauthorized',
+            path: APP_PATHS.UNAUTHORIZED,
             element: <UnauthorizedPage />,
           },
         ],
