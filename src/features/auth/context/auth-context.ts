@@ -12,10 +12,12 @@ export interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
+  isRefreshingUser: boolean;
   authNotice: string | null;
+  lastSyncedAt: string | null;
   loginAsNurse: (payload: NurseLoginPayload) => Promise<AuthUser>;
   loginAsAdmin: (payload: AdminLoginPayload) => Promise<AuthUser>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
   clearAuthNotice: () => void;
 }
