@@ -4,6 +4,7 @@ import type {
   AdminLoginPayload,
   AuthSession,
   AuthUser,
+  ChangePasswordPayload,
   NurseLoginPayload,
 } from '@/features/auth/types/auth.types';
 
@@ -11,6 +12,7 @@ export interface AuthService {
   loginNurse: (payload: NurseLoginPayload) => Promise<AuthSession>;
   loginAdmin: (payload: AdminLoginPayload) => Promise<AuthSession>;
   getCurrentUser: () => Promise<AuthUser>;
+  changePassword: (payload: ChangePasswordPayload) => Promise<void>;
   logout: () => Promise<void>;
 }
 

@@ -1,6 +1,6 @@
 import { ApiError } from '@/api/api-error';
-import { MOCK_ADMIN_USER, MOCK_NURSE_USER } from '@/features/auth/mocks/auth-users.mock';
 import { readAuthSession } from '@/features/auth/lib/auth-session';
+import { MOCK_ADMIN_USER, MOCK_NURSE_USER } from '@/features/auth/mocks/auth-users.mock';
 import type { AuthService } from '@/features/auth/services/auth.service';
 
 const MOCK_PASSWORD = 'password';
@@ -64,6 +64,28 @@ export const mockAuthService: AuthService = {
     }
 
     return session.user;
+  },
+
+  async changePassword(payload) {
+    await wait(400);
+
+    if (payload.current_password !== MOCK_PASSWORD) {
+      throw new ApiError('The given data was invalid.', 422, {
+        current_password: ['Password saat ini tidak sesuai.'],
+      });
+    }
+
+    if (payload.password.length < 8) {
+      throw new ApiError('The given data was invalid.', 422, {
+        password: ['Password baru minimal 8 karakter.'],
+      });
+    }
+
+    if (payload.password !== payload.password_confirmation) {
+      throw new ApiError('The given data was invalid.', 422, {
+        password_confirmation: ['Konfirmasi password tidak sesuai.'],
+      });
+    }
   },
 
   async logout() {

@@ -1,6 +1,7 @@
 import { toApiError } from '@/api/api-error';
 import {
   getCurrentUser,
+  patchChangePassword,
   postAdminLogin,
   postLogout,
   postNurseLogin,
@@ -34,6 +35,14 @@ export const apiAuthService: AuthService = {
       const response = await getCurrentUser();
 
       return mapCurrentUserResponse(response);
+    } catch (error: unknown) {
+      throw toApiError(error);
+    }
+  },
+
+  async changePassword(payload) {
+    try {
+      await patchChangePassword(payload);
     } catch (error: unknown) {
       throw toApiError(error);
     }

@@ -1,5 +1,9 @@
 import { axiosInstance } from '@/api/axios-instance';
-import type { AdminLoginPayload, NurseLoginPayload } from '@/features/auth/types/auth.types';
+import type {
+  AdminLoginPayload,
+  ChangePasswordPayload,
+  NurseLoginPayload,
+} from '@/features/auth/types/auth.types';
 
 export async function postNurseLogin(payload: NurseLoginPayload): Promise<unknown> {
   const response = await axiosInstance.post<unknown>('/auth/login/nurse', payload);
@@ -21,4 +25,8 @@ export async function getCurrentUser(): Promise<unknown> {
   const response = await axiosInstance.get<unknown>('/me');
 
   return response.data;
+}
+
+export async function patchChangePassword(payload: ChangePasswordPayload): Promise<void> {
+  await axiosInstance.patch('/me/password', payload);
 }
