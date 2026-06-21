@@ -6,10 +6,12 @@ import { RequireAuth } from '@/features/auth/components/require-auth';
 import { RequirePermission } from '@/features/auth/components/require-permission';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { ProtectedLayout } from '@/layouts/protected-layout';
+import { ChangePasswordPage } from '@/pages/change-password-page';
 import { DashboardPage } from '@/pages/dashboard-page';
 import { LoginPage } from '@/pages/login-page';
 import { ModulePreviewPage } from '@/pages/module-preview-page';
 import { NotFoundPage } from '@/pages/not-found-page';
+import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
 
 export const appRouter = createBrowserRouter([
@@ -98,11 +100,7 @@ export const appRouter = createBrowserRouter([
             path: '/profile',
             element: (
               <RequirePermission permission={PERMISSIONS.PROFILE_VIEW}>
-                <ModulePreviewPage
-                  title="Profil"
-                  description="Profil menggunakan data user dari endpoint GET /api/me."
-                  requiredPermission={PERMISSIONS.PROFILE_VIEW}
-                />
+                <ProfilePage />
               </RequirePermission>
             ),
           },
@@ -110,11 +108,7 @@ export const appRouter = createBrowserRouter([
             path: '/profile/change-password',
             element: (
               <RequirePermission permission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}>
-                <ModulePreviewPage
-                  title="Ganti Password"
-                  description="Form akan menggunakan endpoint PATCH /api/me/password."
-                  requiredPermission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}
-                />
+                <ChangePasswordPage />
               </RequirePermission>
             ),
           },
