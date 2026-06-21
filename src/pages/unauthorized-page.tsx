@@ -1,7 +1,7 @@
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import { useLocation, useNavigate } from 'react-router';
 
-import { getDefaultAuthenticatedPath } from '@/app/router/navigation';
+import { canAccessProtectedPath, getDefaultAuthenticatedPath } from '@/app/router/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -11,7 +11,8 @@ interface UnauthorizedLocationState {
 }
 
 export function UnauthorizedPage() {
-  const { logout, user } = useAuth();
+  const { isRefreshingUser, logout, refreshUser, user } = useAuth();
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -21,15 +22,36 @@ export function UnauthorizedPage() {
 
   const hasAvailablePage = defaultPath !== '/unauthorized';
 
-  async function performPrimaryAction() {
-    if (hasAvailablePage) {
-      await navigate(defaultPath, {
-        replace: true,
-      });
+  async function performAccessSync() {
+    const synchronizedUser = await refreshUser();
 
+    if (!synchronizedUser) {
       return;
     }
 
+    const requestedPath = state?.from;
+
+    const destination =
+      requestedPath && canAccessProtectedPath(synchronizedUser, requestedPath)
+        ? requestedPath
+        : getDefaultAuthenticatedPath(synchronizedUser);
+
+    await navigate(destination, {
+      replace: true,
+    });
+  }
+
+  function handleAccessSync() {
+    void performAccessSync();
+  }
+
+  function handleAvailablePage() {
+    void navigate(defaultPath, {
+      replace: true,
+    });
+  }
+
+  async function performLogout() {
     await logout();
 
     await navigate('/login', {
@@ -37,13 +59,13 @@ export function UnauthorizedPage() {
     });
   }
 
-  function handlePrimaryAction() {
-    void performPrimaryAction();
+  function handleLogout() {
+    void performLogout();
   }
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="max-w-lg text-center">
+      <div className="w-full max-w-lg text-center">
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
           <BlockOutlinedIcon aria-hidden="true" fontSize="large" />
         </span>
@@ -70,9 +92,21 @@ export function UnauthorizedPage() {
           </div>
         ) : null}
 
-        <Button className="mt-6" onClick={handlePrimaryAction}>
-          {hasAvailablePage ? 'Buka Halaman yang Tersedia' : 'Keluar dari Akun'}
-        </Button>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button isLoading={isRefreshingUser} onClick={handleAccessSync}>
+            Sinkronkan Ulang Akses
+          </Button>
+
+          {hasAvailablePage ? (
+            <Button variant="secondary" onClick={handleAvailablePage}>
+              Buka Halaman Tersedia
+            </Button>
+          ) : (
+            <Button variant="secondary" onClick={handleLogout}>
+              Keluar dari Akun
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
