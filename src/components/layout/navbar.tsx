@@ -5,6 +5,9 @@ import { ProfileDropdown, type ProfileUser } from '@/components/layout/profile-d
 interface NavbarProps {
   title: string;
   user: ProfileUser;
+  canViewProfile: boolean;
+  canChangePassword: boolean;
+  isLoggingOut: boolean;
   onMenuClick: () => void;
   onProfile: () => void;
   onChangePassword: () => void;
@@ -12,6 +15,9 @@ interface NavbarProps {
 }
 
 export function Navbar({
+  canChangePassword,
+  canViewProfile,
+  isLoggingOut,
   onChangePassword,
   onLogout,
   onMenuClick,
@@ -37,6 +43,9 @@ export function Navbar({
 
         <ProfileDropdown
           user={user}
+          canViewProfile={canViewProfile}
+          canChangePassword={canChangePassword}
+          isLoggingOut={isLoggingOut}
           onProfile={onProfile}
           onChangePassword={onChangePassword}
           onLogout={onLogout}

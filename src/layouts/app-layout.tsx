@@ -9,13 +9,19 @@ interface AppLayoutProps {
   user: ProfileUser;
   navigationItems: readonly SidebarNavigationItem[];
   children: ReactNode;
+  canViewProfile: boolean;
+  canChangePassword: boolean;
+  isLoggingOut: boolean;
   onProfile: () => void;
   onChangePassword: () => void;
   onLogout: () => void;
 }
 
 export function AppLayout({
+  canChangePassword,
+  canViewProfile,
   children,
+  isLoggingOut,
   navigationItems,
   onChangePassword,
   onLogout,
@@ -37,6 +43,9 @@ export function AppLayout({
         <Navbar
           title={title}
           user={user}
+          canViewProfile={canViewProfile}
+          canChangePassword={canChangePassword}
+          isLoggingOut={isLoggingOut}
           onMenuClick={() => setMobileSidebarOpen(true)}
           onProfile={onProfile}
           onChangePassword={onChangePassword}

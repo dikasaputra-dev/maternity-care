@@ -11,6 +11,9 @@ export interface ProfileUser {
 
 interface ProfileDropdownProps {
   user: ProfileUser;
+  canViewProfile: boolean;
+  canChangePassword: boolean;
+  isLoggingOut?: boolean;
   onProfile: () => void;
   onChangePassword: () => void;
   onLogout: () => void;
@@ -28,6 +31,9 @@ function getInitials(name: string) {
 }
 
 export function ProfileDropdown({
+  canChangePassword,
+  canViewProfile,
+  isLoggingOut = false,
   onChangePassword,
   onLogout,
   onProfile,
@@ -100,37 +106,45 @@ export function ProfileDropdown({
             </p>
           </div>
 
-          <div className="p-2">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => runAction(onProfile)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <PersonOutlineIcon aria-hidden="true" fontSize="small" />
-              Profil
-            </button>
+          {canViewProfile || canChangePassword ? (
+            <div className="p-2">
+              {canViewProfile ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => runAction(onProfile)}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <PersonOutlineIcon aria-hidden="true" fontSize="small" />
+                  Profil
+                </button>
+              ) : null}
 
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => runAction(onChangePassword)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <KeyOutlinedIcon aria-hidden="true" fontSize="small" />
-              Ganti Password
-            </button>
-          </div>
+              {canChangePassword ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => runAction(onChangePassword)}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <KeyOutlinedIcon aria-hidden="true" fontSize="small" />
+                  Ganti Password
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="border-t border-brand-100 p-2">
             <button
               type="button"
               role="menuitem"
+              disabled={isLoggingOut}
+              aria-busy={isLoggingOut}
               onClick={() => runAction(onLogout)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <LogoutIcon aria-hidden="true" fontSize="small" />
-              Logout
+              {isLoggingOut ? 'Keluar...' : 'Logout'}
             </button>
           </div>
         </div>
