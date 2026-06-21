@@ -1,5 +1,6 @@
-import { createBrowserRouter, Navigate } from 'react-router';
+import { createBrowserRouter } from 'react-router';
 
+import { AuthenticatedIndexRoute } from '@/features/auth/components/authenticated-index-route';
 import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
 import { RequireAuth } from '@/features/auth/components/require-auth';
 import { RequirePermission } from '@/features/auth/components/require-permission';
@@ -29,7 +30,7 @@ export const appRouter = createBrowserRouter([
         children: [
           {
             path: '/',
-            element: <Navigate to="/dashboard" replace />,
+            element: <AuthenticatedIndexRoute />,
           },
           {
             path: '/dashboard',
