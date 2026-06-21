@@ -14,6 +14,7 @@ import { ModulePreviewPage } from '@/pages/module-preview-page';
 import { NotFoundPage } from '@/pages/not-found-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
+import { PatientsPage } from '@/pages/patients-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -47,13 +48,7 @@ export const appRouter = createBrowserRouter([
             path: APP_PATHS.PATIENTS,
             element: (
               <RequirePermission permission={PERMISSIONS.PATIENTS_LIST}>
-                <ModulePreviewPage
-                  title="Pasien"
-                  description="Daftar pasien akan dibangun setelah kontrak Patient API tersedia."
-                  requiredPermission={PERMISSIONS.PATIENTS_LIST}
-                  actionPermission={PERMISSIONS.PATIENTS_CREATE}
-                  actionDescription="User memiliki izin untuk menambahkan pasien."
-                />
+                <PatientsPage />
               </RequirePermission>
             ),
           },
