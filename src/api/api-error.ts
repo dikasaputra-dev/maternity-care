@@ -1,15 +1,17 @@
 import axios from 'axios';
 
-export type ValidationErrors = Record<string, string[]>;
+import type { ApiFieldErrors } from '@/api/api.types';
+
+export type ValidationErrors = ApiFieldErrors;
 
 export class ApiError extends Error {
   readonly status: number | null;
-  readonly validationErrors: ValidationErrors;
+  readonly validationErrors: ApiFieldErrors;
 
   constructor(
     message: string,
     status: number | null = null,
-    validationErrors: ValidationErrors = {},
+    validationErrors: ApiFieldErrors = {},
   ) {
     super(message);
 
@@ -31,12 +33,12 @@ function readMessage(value: unknown) {
   return value.message;
 }
 
-function readValidationErrors(value: unknown): ValidationErrors {
+function readValidationErrors(value: unknown): ApiFieldErrors {
   if (!isRecord(value) || !isRecord(value.errors)) {
     return {};
   }
 
-  const validationErrors: ValidationErrors = {};
+  const validationErrors: ApiFieldErrors = {};
 
   for (const [field, messages] of Object.entries(value.errors)) {
     if (Array.isArray(messages) && messages.every((message) => typeof message === 'string')) {

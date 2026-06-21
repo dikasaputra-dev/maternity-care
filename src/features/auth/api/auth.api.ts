@@ -1,4 +1,5 @@
 import { axiosInstance } from '@/api/axios-instance';
+import { AUTH_ENDPOINTS } from '@/features/auth/api/auth-endpoints';
 import type {
   AdminLoginPayload,
   ChangePasswordPayload,
@@ -6,27 +7,27 @@ import type {
 } from '@/features/auth/types/auth.types';
 
 export async function postNurseLogin(payload: NurseLoginPayload): Promise<unknown> {
-  const response = await axiosInstance.post<unknown>('/auth/login/nurse', payload);
+  const response = await axiosInstance.post<unknown>(AUTH_ENDPOINTS.LOGIN_NURSE, payload);
 
   return response.data;
 }
 
 export async function postAdminLogin(payload: AdminLoginPayload): Promise<unknown> {
-  const response = await axiosInstance.post<unknown>('/auth/login/admin', payload);
+  const response = await axiosInstance.post<unknown>(AUTH_ENDPOINTS.LOGIN_ADMIN, payload);
 
   return response.data;
 }
 
 export async function postLogout(): Promise<void> {
-  await axiosInstance.post('/auth/logout');
+  await axiosInstance.post(AUTH_ENDPOINTS.LOGOUT);
 }
 
 export async function getCurrentUser(): Promise<unknown> {
-  const response = await axiosInstance.get<unknown>('/me');
+  const response = await axiosInstance.get<unknown>(AUTH_ENDPOINTS.CURRENT_USER);
 
   return response.data;
 }
 
 export async function patchChangePassword(payload: ChangePasswordPayload): Promise<void> {
-  await axiosInstance.patch('/me/password', payload);
+  await axiosInstance.patch(AUTH_ENDPOINTS.CHANGE_PASSWORD, payload);
 }

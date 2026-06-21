@@ -1,3 +1,5 @@
+import type { ApiSuccessResponse } from '@/api/api.types';
+
 export interface AuthUserDto {
   id: number;
   name: string;
@@ -7,16 +9,10 @@ export interface AuthUserDto {
   permissions: string[];
 }
 
-export interface LoginResponseDto {
-  message: string;
-  data: {
-    token: string;
-    token_type: string;
-    user: AuthUserDto;
-  };
-}
+export type LoginResponseDto = ApiSuccessResponse<{
+  token: string;
+  token_type: string;
+  user: AuthUserDto;
+}>;
 
-export interface CurrentUserResponseDto {
-  message: string;
-  data: AuthUserDto;
-}
+export type CurrentUserResponseDto = ApiSuccessResponse<AuthUserDto>;
