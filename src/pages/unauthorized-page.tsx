@@ -1,7 +1,11 @@
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import { useLocation, useNavigate } from 'react-router';
 
-import { canAccessProtectedPath, getDefaultAuthenticatedPath } from '@/app/router/navigation';
+import {
+  canAccessProtectedPath,
+  getDefaultAuthenticatedPath,
+  getRequiredPermissionForPath,
+} from '@/app/router/navigation';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -12,14 +16,15 @@ interface UnauthorizedLocationState {
 
 export function UnauthorizedPage() {
   const { isRefreshingUser, logout, refreshUser, user } = useAuth();
-
   const location = useLocation();
   const navigate = useNavigate();
 
   const state = location.state as UnauthorizedLocationState | null;
+  const inferredPermission = state?.from ? getRequiredPermissionForPath(state.from) : null;
+
+  const requiredPermission = state?.requiredPermission ?? inferredPermission ?? null;
 
   const defaultPath = user ? getDefaultAuthenticatedPath(user) : '/login';
-
   const hasAvailablePage = defaultPath !== '/unauthorized';
 
   async function performAccessSync() {
@@ -78,15 +83,15 @@ export function UnauthorizedPage() {
           Akun yang sedang digunakan tidak memiliki permission untuk membuka halaman tersebut.
         </p>
 
-        {state?.requiredPermission ? (
+        {requiredPermission ? (
           <div className="mt-5 rounded-lg border border-red-100 bg-red-50/60 px-4 py-3 text-left">
             <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
               Permission dibutuhkan
             </p>
 
-            <p className="mt-1 text-sm text-red-800">{state.requiredPermission}</p>
+            <p className="mt-1 text-sm text-red-800">{requiredPermission}</p>
 
-            {state.from ? (
+            {state?.from ? (
               <p className="mt-2 break-all text-xs text-red-600">Route: {state.from}</p>
             ) : null}
           </div>

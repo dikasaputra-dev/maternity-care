@@ -3,6 +3,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Badge, Card } from '@/components/ui/surface';
 import { PermissionGate } from '@/features/auth/components/permission-gate';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { createRbacSnapshot } from '@/features/auth/lib/rbac-testing';
 
 function formatDateTime(value: string | null) {
   if (!value) {
@@ -26,7 +28,15 @@ export function ProfilePage() {
   const { isRefreshingUser, lastSyncedAt, refreshUser, user } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) {
+  const rbacSnapshot = useMemo(() => {
+    if (!user) {
+      return null;
+    }
+
+    return createRbacSnapshot(user);
+  }, [user]);
+
+  if (!user || !rbacSnapshot) {
     return null;
   }
 
@@ -52,7 +62,8 @@ export function ProfilePage() {
         </h2>
 
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-          Data profil, role, dan permission berasal dari session yang disinkronkan dengan backend.
+          Data profil, role, permission, dan akses route berasal dari session yang disinkronkan
+          dengan backend.
         </p>
       </section>
 
@@ -68,6 +79,7 @@ export function ProfilePage() {
 
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge tone="info">{user.role === 'nurse' ? 'Nurse' : 'Admin'}</Badge>
+
                 <Badge tone="success">Authenticated</Badge>
               </div>
             </div>
@@ -139,6 +151,59 @@ export function ProfilePage() {
           </Button>
         </Card>
       </section>
+
+      <Card>
+        <h3 className="text-base font-semibold text-slate-950">Ringkasan RBAC</h3>
+
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          Ringkasan ini membantu mengecek apakah permission user sudah sesuai dengan route yang
+          tersedia di frontend.
+        </p>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-brand-100 bg-brand-50/50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Permission
+            </p>
+
+            <p className="mt-2 text-2xl font-semibold text-slate-950">
+              {rbacSnapshot.totalPermissions}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+              Route Diizinkan
+            </p>
+
+            <p className="mt-2 text-2xl font-semibold text-emerald-800">
+              {rbacSnapshot.allowedRouteCount}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+              Route Ditolak
+            </p>
+
+            <p className="mt-2 text-2xl font-semibold text-red-800">
+              {rbacSnapshot.deniedRouteCount}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className="text-sm font-semibold text-slate-800">Menu yang tersedia</p>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {rbacSnapshot.allowedNavigationLabels.map((label) => (
+              <Badge key={label} tone="info">
+                {label}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       <Card>
         <h3 className="text-base font-semibold text-slate-950">Permission aktif</h3>
