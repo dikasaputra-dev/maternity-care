@@ -14,6 +14,7 @@ import type {
   AuthRole,
   AuthSession,
   AuthUser,
+  ChangePasswordPayload,
   NurseLoginPayload,
 } from '@/features/auth/types/auth.types';
 
@@ -34,15 +35,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<AuthSession | null>(() => readAuthSession());
 
   const [isInitializing, setIsInitializing] = useState(true);
-
   const [isRefreshingUser, setIsRefreshingUser] = useState(false);
-
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
-
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   const syncPromiseRef = useRef<Promise<AuthUser | null> | null>(null);
-
   const syncRequestIdRef = useRef(0);
   const lastBackgroundSyncRef = useRef(0);
 
@@ -111,7 +109,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         const status = error instanceof ApiError ? error.status : null;
-
         const accessRejected = status === 401 || status === 403;
 
         if (accessRejected || reason === 'initial') {
@@ -193,12 +190,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     window.addEventListener('focus', synchronizeAfterFocus);
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', synchronizeAfterFocus);
-
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [startUserSync]);
@@ -266,25 +261,34 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [completeLogin],
   );
 
+  const changePassword = useCallback(async (payload: ChangePasswordPayload) => {
+    await authService.changePassword(payload);
+  }, []);
+
   const refreshUser = useCallback(() => {
     return startUserSync('manual');
   }, [startUserSync]);
 
   const logout = useCallback(async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
     invalidatePendingSync();
+    setIsLoggingOut(true);
 
     try {
       await authService.logout();
     } catch {
-      // Local session must still be removed
-      // when the API is unavailable.
+      // Local session must still be removed when the API is unavailable.
     } finally {
       clearAuthSession();
       setSession(null);
       setLastSyncedAt(null);
       setAuthNotice(null);
+      setIsLoggingOut(false);
     }
-  }, [invalidatePendingSync]);
+  }, [invalidatePendingSync, isLoggingOut]);
 
   const value = useMemo(
     () => ({
@@ -293,18 +297,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isAuthenticated: session !== null,
       isInitializing,
       isRefreshingUser,
+      isLoggingOut,
       authNotice,
       lastSyncedAt,
       loginAsNurse,
       loginAsAdmin,
+      changePassword,
       refreshUser,
       logout,
       clearAuthNotice,
     }),
     [
       authNotice,
+      changePassword,
       clearAuthNotice,
       isInitializing,
+      isLoggingOut,
       isRefreshingUser,
       lastSyncedAt,
       loginAsAdmin,
