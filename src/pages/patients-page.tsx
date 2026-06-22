@@ -10,8 +10,8 @@ import { PermissionGate } from '@/features/auth/components/permission-gate';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { PatientTable } from '@/features/patients/components/patient-table';
 import { filterPatients } from '@/features/patients/lib/patient-filter';
+import { listPatients } from '@/features/patients/lib/patient-query';
 import { getPatientDetailPath } from '@/features/patients/lib/patient-routes';
-import { MOCK_PATIENTS } from '@/features/patients/mocks/patient.mock';
 import type {
   PatientFilterState,
   PatientRiskStatus,
@@ -25,8 +25,9 @@ const initialFilters: PatientFilterState = {
 export function PatientsPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<PatientFilterState>(initialFilters);
+  const [patients] = useState(() => listPatients());
 
-  const filteredPatients = useMemo(() => filterPatients(MOCK_PATIENTS, filters), [filters]);
+  const filteredPatients = useMemo(() => filterPatients(patients, filters), [filters, patients]);
 
   function handleSearchChange(value: string) {
     setFilters((current) => ({
@@ -107,7 +108,7 @@ export function PatientsPage() {
             <h3 className="text-base font-semibold text-slate-950">Pasien terdaftar</h3>
 
             <p className="text-sm text-slate-500">
-              {filteredPatients.length} dari {MOCK_PATIENTS.length} pasien ditampilkan.
+              {filteredPatients.length} dari {patients.length} pasien ditampilkan.
             </p>
           </div>
         </div>
