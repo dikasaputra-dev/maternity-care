@@ -6,6 +6,13 @@ import PregnantWomanOutlinedIcon from '@mui/icons-material/PregnantWomanOutlined
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 
+import {
+  formatBloodPressure,
+  formatFetalWeight,
+  formatGestationalAge,
+  formatNullableNumber,
+  formatPatientDateTime,
+} from '@/features/patients/lib/patient-format';
 import { Card } from '@/components/ui/surface';
 import { PatientRiskBadge } from '@/features/patients/components/patient-risk-badge';
 import type { Patient } from '@/features/patients/types/patient.types';
@@ -27,33 +34,6 @@ interface PatientInfoItemProps {
 interface ObstetricInfoItemProps {
   label: string;
   value: string;
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
-}
-
-function formatNullableNumber(value: number | null) {
-  return value === null ? '-' : value.toString();
-}
-
-function formatGestationalAge(value: number | null) {
-  return value === null ? '-' : `${value} minggu`;
-}
-
-function formatBloodPressure(value: string | null) {
-  return value ?? '-';
-}
-
-function formatFetalWeight(value: number | null) {
-  if (value === null) {
-    return '-';
-  }
-
-  return `${value.toLocaleString('id-ID')} gram`;
 }
 
 function PatientInfoItem({ className, icon, label, value }: PatientInfoItemProps) {
@@ -120,7 +100,7 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
 
           <PatientInfoItem
             label="Terdaftar"
-            value={formatDateTime(patient.registeredAt)}
+            value={formatPatientDateTime(patient.registeredAt)}
             icon={<CalendarMonthOutlinedIcon aria-hidden="true" fontSize="small" />}
           />
 

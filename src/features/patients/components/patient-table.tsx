@@ -9,24 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PatientRiskBadge } from '@/features/patients/components/patient-risk-badge';
-import type { Patient } from '@/features/patients/types/patient.types';
 import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
+import { PatientRiskBadge } from '@/features/patients/components/patient-risk-badge';
+import { formatLatestScreening, formatPatientAge } from '@/features/patients/lib/patient-format';
+import type { Patient } from '@/features/patients/types/patient.types';
 
 interface PatientTableProps {
   patients: readonly Patient[];
   onOpenDetail: (patientId: string) => void;
-}
-
-function formatLatestScreening(value: string | null) {
-  if (!value) {
-    return 'Belum ada';
-  }
-
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value));
 }
 
 export function PatientTable({ onOpenDetail, patients }: PatientTableProps) {
@@ -54,7 +44,7 @@ export function PatientTable({ onOpenDetail, patients }: PatientTableProps) {
               </div>
             </TableCell>
 
-            <TableCell>{patient.age} tahun</TableCell>
+            <TableCell>{formatPatientAge(patient.age)}</TableCell>
 
             <TableCell>
               <PatientRiskBadge riskStatus={patient.riskStatus} />
