@@ -1,11 +1,13 @@
+import type { PatientLocation } from '@/features/patients/constants/patient-options';
+
 export type PatientRiskStatus = 'low' | 'medium' | 'high' | 'unknown';
 
 export interface PatientObstetricSummary {
-  gravida: number;
-  partus: number;
-  abortus: number;
-  gestationalAgeWeeks: number;
-  bloodPressure: string;
+  gravida: number | null;
+  partus: number | null;
+  abortus: number | null;
+  gestationalAgeWeeks: number | null;
+  bloodPressure: string | null;
   estimatedFetalWeightGram: number | null;
 }
 
@@ -22,7 +24,7 @@ export interface Patient {
   medicalRecordNumber: string;
   name: string;
   age: number;
-  location: string;
+  location: PatientLocation;
   address: string;
   phoneNumber: string;
   registeredAt: string;
@@ -30,6 +32,14 @@ export interface Patient {
   latestScreeningAt: string | null;
   obstetricSummary: PatientObstetricSummary;
   workflowStatus: PatientWorkflowStatus;
+}
+
+export interface CreatePatientInput {
+  name: string;
+  age: number;
+  location: PatientLocation;
+  address: string;
+  phoneNumber: string;
 }
 
 export interface PatientFilterState {

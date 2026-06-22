@@ -7,6 +7,7 @@ import PregnantWomanOutlinedIcon from '@mui/icons-material/PregnantWomanOutlined
 import { Card } from '@/components/ui/surface';
 import { PatientRiskBadge } from '@/features/patients/components/patient-risk-badge';
 import type { Patient } from '@/features/patients/types/patient.types';
+import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
 
 interface PatientDetailSummaryProps {
   patient: Patient;
@@ -19,8 +20,20 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatNullableNumber(value: number | null) {
+  return value === null ? '-' : value.toString();
+}
+
+function formatGestationalAge(value: number | null) {
+  return value === null ? '-' : `${value} minggu`;
+}
+
+function formatBloodPressure(value: string | null) {
+  return value ?? '-';
+}
+
 function formatFetalWeight(value: number | null) {
-  if (!value) {
+  if (value === null) {
     return '-';
   }
 
@@ -62,7 +75,9 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
             <div>
               <p className="text-sm font-medium text-slate-500">Lokasi</p>
 
-              <p className="mt-1 text-sm font-semibold text-slate-900">{patient.location}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">
+                {getPatientLocationLabel(patient.location)}
+              </p>
 
               <p className="mt-1 text-sm text-slate-500">{patient.address}</p>
             </div>
@@ -126,7 +141,7 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
             <h3 className="text-base font-semibold text-slate-950">Ringkasan Obstetri</h3>
 
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Data ringkas untuk membantu navigasi awal pasien.
+              Data ini akan terisi setelah skrining awal dilakukan.
             </p>
           </div>
         </div>
@@ -137,14 +152,14 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
               Gravida
             </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-950">
-              {patient.obstetricSummary.gravida}
+              {formatNullableNumber(patient.obstetricSummary.gravida)}
             </dd>
           </div>
 
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">Partus</dt>
             <dd className="mt-1 text-sm font-semibold text-slate-950">
-              {patient.obstetricSummary.partus}
+              {formatNullableNumber(patient.obstetricSummary.partus)}
             </dd>
           </div>
 
@@ -153,7 +168,7 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
               Abortus
             </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-950">
-              {patient.obstetricSummary.abortus}
+              {formatNullableNumber(patient.obstetricSummary.abortus)}
             </dd>
           </div>
 
@@ -162,14 +177,14 @@ export function PatientDetailSummary({ patient }: PatientDetailSummaryProps) {
               Usia Hamil
             </dt>
             <dd className="mt-1 text-sm font-semibold text-slate-950">
-              {patient.obstetricSummary.gestationalAgeWeeks} minggu
+              {formatGestationalAge(patient.obstetricSummary.gestationalAgeWeeks)}
             </dd>
           </div>
 
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">TD</dt>
             <dd className="mt-1 text-sm font-semibold text-slate-950">
-              {patient.obstetricSummary.bloodPressure}
+              {formatBloodPressure(patient.obstetricSummary.bloodPressure)}
             </dd>
           </div>
 
