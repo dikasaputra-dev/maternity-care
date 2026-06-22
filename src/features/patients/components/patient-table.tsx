@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { PatientRiskBadge } from '@/features/patients/components/patient-risk-badge';
 import type { Patient } from '@/features/patients/types/patient.types';
+import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
 
 interface PatientTableProps {
   patients: readonly Patient[];
@@ -59,7 +60,7 @@ export function PatientTable({ onOpenDetail, patients }: PatientTableProps) {
               <PatientRiskBadge riskStatus={patient.riskStatus} />
             </TableCell>
 
-            <TableCell>{patient.location}</TableCell>
+            <TableCell>{getPatientLocationLabel(patient.location)}</TableCell>
 
             <TableCell>{formatLatestScreening(patient.latestScreeningAt)}</TableCell>
 
