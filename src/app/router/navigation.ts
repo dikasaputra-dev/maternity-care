@@ -31,6 +31,14 @@ function getPathname(path: string) {
   return pathname;
 }
 
+function getSegments(path: string) {
+  return path.split('/').filter(Boolean);
+}
+
+function isDynamicSegment(segment: string) {
+  return segment.startsWith(':');
+}
+
 function isPermissionRoute(route: AppRouteMetadata): route is PermissionRouteMetadata {
   return route.access === 'permission';
 }
@@ -39,12 +47,45 @@ function isNavigationRoute(route: AppRouteMetadata): route is NavigationRouteMet
   return isPermissionRoute(route) && route.navigation !== undefined;
 }
 
-function matchesRoute(pathname: string, route: PermissionRouteMetadata) {
-  if (route.end) {
-    return pathname === route.path;
+function matchesRoute(pathname: string, route: AppRouteMetadata) {
+  const routeSegments = getSegments(route.path);
+  const pathSegments = getSegments(pathname);
+
+  if (route.end && routeSegments.length !== pathSegments.length) {
+    return false;
   }
 
-  return pathname === route.path || pathname.startsWith(`${route.path}/`);
+  if (routeSegments.length > pathSegments.length) {
+    return false;
+  }
+
+  return routeSegments.every((routeSegment, index) => {
+    const pathSegment = pathSegments[index];
+
+    return (
+      pathSegment !== undefined && (isDynamicSegment(routeSegment) || routeSegment === pathSegment)
+    );
+  });
+}
+
+function getRouteScore(route: AppRouteMetadata) {
+  const segments = getSegments(route.path);
+  const staticSegments = segments.filter((segment) => !isDynamicSegment(segment)).length;
+
+  return segments.length * 10 + staticSegments;
+}
+
+function findBestMatchingRoute<TRoute extends AppRouteMetadata>(
+  routes: readonly TRoute[],
+  pathname: string,
+) {
+  const matchedRoutes = routes.filter((route) => matchesRoute(pathname, route));
+
+  return (
+    matchedRoutes
+      .sort((firstRoute, secondRoute) => getRouteScore(secondRoute) - getRouteScore(firstRoute))
+      .at(0) ?? null
+  );
 }
 
 export const PERMISSION_ROUTES: readonly PermissionRouteMetadata[] =
@@ -67,24 +108,14 @@ export function getAllowedNavigationItems(user: AuthUser) {
 
 export function getPageTitle(pathname: string) {
   const normalizedPathname = getPathname(pathname);
-
-  const exactRoute = ROUTE_METADATA.find((route) => route.path === normalizedPathname);
-
-  if (exactRoute) {
-    return exactRoute.title;
-  }
-
-  const matchedRoute = ROUTE_METADATA.find(
-    (route) => normalizedPathname === route.path || normalizedPathname.startsWith(`${route.path}/`),
-  );
+  const matchedRoute = findBestMatchingRoute(ROUTE_METADATA, normalizedPathname);
 
   return matchedRoute?.title ?? 'MaternityCare';
 }
 
 export function getRequiredPermissionForPath(path: string) {
   const pathname = getPathname(path);
-
-  const routeRule = PERMISSION_ROUTES.find((route) => matchesRoute(pathname, route));
+  const routeRule = findBestMatchingRoute(PERMISSION_ROUTES, pathname);
 
   return routeRule?.permission ?? null;
 }

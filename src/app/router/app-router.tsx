@@ -15,6 +15,7 @@ import { NotFoundPage } from '@/pages/not-found-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
 import { PatientsPage } from '@/pages/patients-page';
+import { PatientDetailPage } from '@/pages/patient-detail-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -49,6 +50,26 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.PATIENTS_LIST}>
                 <PatientsPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.PATIENT_CREATE,
+            element: (
+              <RequirePermission permission={PERMISSIONS.PATIENTS_CREATE}>
+                <ModulePreviewPage
+                  title="Tambah Pasien"
+                  description="Form tambah pasien akan dibangun pada Phase 12."
+                  requiredPermission={PERMISSIONS.PATIENTS_CREATE}
+                />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.PATIENT_DETAIL,
+            element: (
+              <RequirePermission permission={PERMISSIONS.PATIENTS_VIEW}>
+                <PatientDetailPage />
               </RequirePermission>
             ),
           },

@@ -2,6 +2,7 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/form-controls';
 import { Card } from '@/components/ui/surface';
@@ -9,6 +10,7 @@ import { PermissionGate } from '@/features/auth/components/permission-gate';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { PatientTable } from '@/features/patients/components/patient-table';
 import { filterPatients } from '@/features/patients/lib/patient-filter';
+import { getPatientDetailPath } from '@/features/patients/lib/patient-routes';
 import { MOCK_PATIENTS } from '@/features/patients/mocks/patient.mock';
 import type {
   PatientFilterState,
@@ -41,11 +43,11 @@ export function PatientsPage() {
   }
 
   function handleOpenDetail(patientId: string) {
-    void navigate(`/patients/${patientId}`);
+    void navigate(getPatientDetailPath(patientId));
   }
 
   function handleCreatePatient() {
-    void navigate('/patients/create');
+    void navigate(APP_PATHS.PATIENT_CREATE);
   }
 
   return (
