@@ -1,4 +1,4 @@
-import maternityCareLogo from '@/assets/brand/maternity-care-logo.svg';
+import maternityCareLogo from '@/assets/brand/maternity-care-logo.ico';
 import { cn } from '@/lib/cn';
 
 interface BrandLogoProps {

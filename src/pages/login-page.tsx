@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/form-controls';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import type { AuthRole, AuthUser } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/cn';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 const NIM_PATTERN = /^\d{3}[A-Z]{2}\d{5}$/;
 
@@ -157,9 +158,7 @@ export function LoginPage() {
     <main className="grid min-h-screen bg-surface lg:grid-cols-[minmax(0,1fr)_minmax(28rem,0.8fr)]">
       <section className="hidden bg-linear-to-br from-brand-50 via-white to-brand-100 p-12 lg:flex lg:flex-col lg:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-brand-400 to-brand-300 text-brand-950 shadow-sm">
-            <HealthAndSafetyOutlinedIcon aria-hidden="true" />
-          </span>
+          <BrandLogo decorative className="h-12 w-12 shrink-0" />
 
           <div>
             <p className="font-semibold text-slate-950">MaternityCare</p>
@@ -170,19 +169,17 @@ export function LoginPage() {
 
         <div className="max-w-xl">
           <p className="text-sm font-semibold uppercase tracking-wider text-brand-600">
-            Clinical Workspace
+            Maternal Risk Navigator
           </p>
 
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950">
-            Pendataan maternitas yang aman, terstruktur, dan mudah digunakan.
+            Early Screening and Risk Detection for Maternal Care
           </h1>
 
-          <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">
-            Hak akses pengguna mengikuti role dan permission yang dikirim oleh backend.
-          </p>
+          <div aria-hidden="true" className="mt-5 h-14 max-w-lg" />
         </div>
 
-        <p className="text-sm text-slate-500">Authentication and RBAC</p>
+        <div aria-hidden="true" className="h-5" />
       </section>
 
       <section className="flex items-center justify-center bg-white px-5 py-10 sm:px-8">
