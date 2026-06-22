@@ -53,6 +53,8 @@ const RBAC_REGRESSION_CASES: readonly RbacRegressionCase[] = [
     allowedPaths: [
       APP_PATHS.DASHBOARD,
       APP_PATHS.PATIENTS,
+      APP_PATHS.PATIENT_CREATE,
+      APP_PATHS.PATIENT_DETAIL,
       APP_PATHS.SCREENINGS,
       APP_PATHS.HISTORY,
       APP_PATHS.REPORTS,
@@ -85,6 +87,8 @@ const RBAC_REGRESSION_CASES: readonly RbacRegressionCase[] = [
     expectedDefaultPath: APP_PATHS.PATIENTS,
     allowedPaths: [
       APP_PATHS.PATIENTS,
+      APP_PATHS.PATIENT_CREATE,
+      APP_PATHS.PATIENT_DETAIL,
       APP_PATHS.SCREENINGS,
       APP_PATHS.HISTORY,
       APP_PATHS.REPORTS,
@@ -101,6 +105,8 @@ const RBAC_REGRESSION_CASES: readonly RbacRegressionCase[] = [
     allowedPaths: [
       APP_PATHS.DASHBOARD,
       APP_PATHS.PATIENTS,
+      APP_PATHS.PATIENT_CREATE,
+      APP_PATHS.PATIENT_DETAIL,
       APP_PATHS.SCREENINGS,
       APP_PATHS.HISTORY,
       APP_PATHS.REPORTS,
@@ -116,6 +122,8 @@ const RBAC_REGRESSION_CASES: readonly RbacRegressionCase[] = [
     deniedPaths: [
       APP_PATHS.DASHBOARD,
       APP_PATHS.PATIENTS,
+      APP_PATHS.PATIENT_CREATE,
+      APP_PATHS.PATIENT_DETAIL,
       APP_PATHS.SCREENINGS,
       APP_PATHS.HISTORY,
       APP_PATHS.REPORTS,
