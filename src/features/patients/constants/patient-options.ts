@@ -1,3 +1,5 @@
+import type { PatientLocation } from '@/features/patients/types/patient.types';
+
 export const PATIENT_LOCATION_OPTIONS = [
   {
     value: 'poliklinik-puskesmas',
@@ -15,14 +17,11 @@ export const PATIENT_LOCATION_OPTIONS = [
     value: 'ruang-vk-ponek-rs',
     label: 'Ruang VK/PONEK RS',
   },
-] as const;
+] as const satisfies readonly {
+  value: PatientLocation;
+  label: string;
+}[];
 
-export type PatientLocation = (typeof PATIENT_LOCATION_OPTIONS)[number]['value'];
-
-export function isPatientLocation(value: string): value is PatientLocation {
-  return PATIENT_LOCATION_OPTIONS.some((location) => location.value === value);
-}
-
-export function getPatientLocationLabel(value: PatientLocation) {
-  return PATIENT_LOCATION_OPTIONS.find((location) => location.value === value)?.label ?? value;
+export function getPatientLocationLabel(location: PatientLocation) {
+  return PATIENT_LOCATION_OPTIONS.find((option) => option.value === location)?.label ?? location;
 }

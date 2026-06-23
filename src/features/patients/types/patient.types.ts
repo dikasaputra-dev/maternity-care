@@ -1,48 +1,60 @@
-import type { PatientLocation } from '@/features/patients/constants/patient-options';
+export type PatientLocation =
+  | 'poliklinik-puskesmas'
+  | 'ruang-vk-poned-puskesmas'
+  | 'poliklinik-rs'
+  | 'ruang-vk-ponek-rs';
 
-export type PatientRiskStatus = 'low' | 'medium' | 'high' | 'unknown';
-
-export interface PatientObstetricSummary {
-  gravida: number | null;
-  partus: number | null;
-  abortus: number | null;
-  gestationalAgeWeeks: number | null;
-  bloodPressure: string | null;
-  estimatedFetalWeightGram: number | null;
-}
-
-export interface PatientWorkflowStatus {
-  initialScreeningCompleted: boolean;
-  monitoringEntryCount: number;
-  actionRecorded: boolean;
-  deliveryOutcomeRecorded: boolean;
-  newbornOutcomeRecorded: boolean;
+export interface PatientCreator {
+  id: number;
+  name: string;
 }
 
 export interface Patient {
-  id: string;
-  medicalRecordNumber: string;
+  id: number;
+  medical_record_number: string;
   name: string;
-  age: number;
+  date_of_birth: string;
   location: PatientLocation;
-  address: string;
-  phoneNumber: string;
-  registeredAt: string;
-  riskStatus: PatientRiskStatus;
-  latestScreeningAt: string | null;
-  obstetricSummary: PatientObstetricSummary;
-  workflowStatus: PatientWorkflowStatus;
+  created_by: number;
+  creator?: PatientCreator;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface CreatePatientInput {
-  name: string;
-  age: number;
-  location: PatientLocation;
-  address: string;
-  phoneNumber: string;
+export interface PatientListMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  last_page: number;
 }
 
-export interface PatientFilterState {
-  search: string;
-  riskStatus: PatientRiskStatus | 'all';
+export interface PatientListLinks {
+  first: string | null;
+  last: string | null;
+  previous: string | null;
+  next: string | null;
+}
+
+export interface PatientListResult {
+  message: string;
+  patients: Patient[];
+  meta: PatientListMeta;
+  links: PatientListLinks;
+}
+
+export interface PatientListQuery {
+  search?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface CreatePatientPayload {
+  name: string;
+  date_of_birth: string;
+  location: PatientLocation;
+}
+
+export interface CreatePatientResult {
+  message: string;
+  patient: Patient;
 }

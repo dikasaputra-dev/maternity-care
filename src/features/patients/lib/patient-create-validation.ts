@@ -1,53 +1,46 @@
-import {
-  isPatientLocation,
-  type PatientLocation,
-} from '@/features/patients/constants/patient-options';
+import type {
+  CreatePatientPayload,
+  PatientLocation,
+} from '@/features/patients/types/patient.types';
 
-export interface PatientCreateFormState {
+export interface PatientCreateFormValues {
   name: string;
-  age: string;
+  dateOfBirth: string;
   location: PatientLocation | '';
-  address: string;
-  phoneNumber: string;
 }
 
-export type PatientCreateField = keyof PatientCreateFormState;
+export type PatientCreateFieldErrors = Partial<Record<keyof PatientCreateFormValues, string>>;
 
-export type PatientCreateTextField = Exclude<PatientCreateField, 'location'>;
+const PATIENT_LOCATIONS: readonly PatientLocation[] = [
+  'poliklinik-puskesmas',
+  'ruang-vk-poned-puskesmas',
+  'poliklinik-rs',
+  'ruang-vk-ponek-rs',
+];
 
-export type PatientCreateErrors = Partial<Record<PatientCreateField, string>>;
-
-export const initialPatientCreateFormState: PatientCreateFormState = {
+export const INITIAL_PATIENT_CREATE_FORM_VALUES: PatientCreateFormValues = {
   name: '',
-  age: '',
+  dateOfBirth: '',
   location: '',
-  address: '',
-  phoneNumber: '',
 };
 
-const PHONE_PATTERN = /^[0-9+()\-\s]{8,20}$/;
-
-export function parsePatientAge(value: string) {
-  if (!value.trim()) {
-    return null;
-  }
-
-  const parsedAge = Number(value);
-
-  if (!Number.isInteger(parsedAge)) {
-    return null;
-  }
-
-  return parsedAge;
+function isPatientLocation(value: string): value is PatientLocation {
+  return PATIENT_LOCATIONS.includes(value as PatientLocation);
 }
 
-export function validateCreatePatientForm(form: PatientCreateFormState): PatientCreateErrors {
-  const errors: PatientCreateErrors = {};
+function isFutureDate(value: string) {
+  const date = new Date(value);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  return date.getTime() > today.getTime();
+}
+
+export function validatePatientCreateForm(form: PatientCreateFormValues): PatientCreateFieldErrors {
+  const errors: PatientCreateFieldErrors = {};
 
   const name = form.name.trim();
-  const age = parsePatientAge(form.age);
-  const address = form.address.trim();
-  const phoneNumber = form.phoneNumber.trim();
 
   if (!name) {
     errors.name = 'Nama pasien wajib diisi.';
@@ -55,12 +48,12 @@ export function validateCreatePatientForm(form: PatientCreateFormState): Patient
     errors.name = 'Nama pasien minimal 3 karakter.';
   }
 
-  if (!form.age.trim()) {
-    errors.age = 'Usia ibu wajib diisi.';
-  } else if (age === null) {
-    errors.age = 'Usia harus berupa angka.';
-  } else if (age < 10 || age > 60) {
-    errors.age = 'Usia ibu harus berada antara 10 sampai 60 tahun.';
+  if (!form.dateOfBirth) {
+    errors.dateOfBirth = 'Tanggal lahir wajib diisi.';
+  } else if (Number.isNaN(new Date(form.dateOfBirth).getTime())) {
+    errors.dateOfBirth = 'Tanggal lahir tidak valid.';
+  } else if (isFutureDate(form.dateOfBirth)) {
+    errors.dateOfBirth = 'Tanggal lahir tidak boleh melebihi hari ini.';
   }
 
   if (!form.location) {
@@ -69,17 +62,21 @@ export function validateCreatePatientForm(form: PatientCreateFormState): Patient
     errors.location = 'Lokasi pasien tidak valid.';
   }
 
-  if (!address) {
-    errors.address = 'Alamat pasien wajib diisi.';
-  } else if (address.length < 5) {
-    errors.address = 'Alamat pasien terlalu pendek.';
-  }
-
-  if (!phoneNumber) {
-    errors.phoneNumber = 'Nomor telepon wajib diisi.';
-  } else if (!PHONE_PATTERN.test(phoneNumber)) {
-    errors.phoneNumber = 'Format nomor telepon tidak valid.';
-  }
-
   return errors;
+}
+
+export function hasPatientCreateErrors(errors: PatientCreateFieldErrors) {
+  return Object.keys(errors).length > 0;
+}
+
+export function mapPatientCreateFormToPayload(form: PatientCreateFormValues): CreatePatientPayload {
+  if (!isPatientLocation(form.location)) {
+    throw new Error('Lokasi pasien tidak valid.');
+  }
+
+  return {
+    name: form.name.trim(),
+    date_of_birth: form.dateOfBirth,
+    location: form.location,
+  };
 }
