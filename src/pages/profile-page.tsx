@@ -3,49 +3,96 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import KeyOutlinedIcon from '@mui/icons-material/KeyOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { APP_PATHS, ROUTE_METADATA } from '@/app/router/route-metadata';
+import { getAllowedNavigationItems } from '@/app/router/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge, Card } from '@/components/ui/surface';
 import { PermissionGate } from '@/features/auth/components/permission-gate';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { createRbacSnapshot } from '@/features/auth/lib/rbac-testing';
+import type { AuthUser } from '@/features/auth/types/auth.types';
+
+interface RbacSummary {
+  totalPermissions: number;
+  allowedRouteCount: number;
+  deniedRouteCount: number;
+  allowedNavigationLabels: string[];
+}
 
 function formatDateTime(value: string | null) {
   if (!value) {
     return 'Belum disinkronkan';
   }
 
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Belum disinkronkan';
+  }
+
   return new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value));
+  }).format(date);
+}
+
+function createProfileRbacSummary(user: AuthUser): RbacSummary {
+  let allowedRouteCount = 0;
+  let deniedRouteCount = 0;
+
+  for (const route of ROUTE_METADATA) {
+    if (route.access !== 'permission') {
+      continue;
+    }
+
+    if (user.permissions.includes(route.permission)) {
+      allowedRouteCount += 1;
+    } else {
+      deniedRouteCount += 1;
+    }
+  }
+
+  return {
+    totalPermissions: user.permissions.length,
+    allowedRouteCount,
+    deniedRouteCount,
+    allowedNavigationLabels: getAllowedNavigationItems(user).map((item) => item.label),
+  };
 }
 
 export function ProfilePage() {
   const { isRefreshingUser, lastSyncedAt, refreshUser, user } = useAuth();
-  const navigate = useNavigate();
 
-  const rbacSnapshot = useMemo(() => {
+  const navigate = useNavigate();
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+
+  const rbacSummary = useMemo(() => {
     if (!user) {
       return null;
     }
 
-    return createRbacSnapshot(user);
+    return createProfileRbacSummary(user);
   }, [user]);
 
-  if (!user || !rbacSnapshot) {
+  if (!user || !rbacSummary) {
     return null;
   }
 
   function handleChangePassword() {
-    void navigate('/profile/change-password');
+    void navigate(APP_PATHS.CHANGE_PASSWORD);
   }
 
   async function performRefresh() {
-    await refreshUser();
+    setRefreshError(null);
+
+    try {
+      await refreshUser();
+    } catch {
+      setRefreshError('Sinkronisasi gagal. Periksa koneksi atau coba login ulang.');
+    }
   }
 
   function handleRefresh() {
@@ -110,6 +157,7 @@ export function ProfilePage() {
 
               <div>
                 <dt className="text-sm font-medium text-slate-500">NIM</dt>
+
                 <dd className="mt-1 text-sm font-semibold text-slate-900">{user.nim ?? '-'}</dd>
               </div>
             </div>
@@ -123,6 +171,7 @@ export function ProfilePage() {
 
               <div>
                 <dt className="text-sm font-medium text-slate-500">Email</dt>
+
                 <dd className="mt-1 text-sm font-semibold text-slate-900">{user.email ?? '-'}</dd>
               </div>
             </div>
@@ -139,6 +188,15 @@ export function ProfilePage() {
           <p className="mt-4 text-sm text-slate-700">
             Terakhir sinkron: <span className="font-semibold">{formatDateTime(lastSyncedAt)}</span>
           </p>
+
+          {refreshError ? (
+            <div
+              role="alert"
+              className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {refreshError}
+            </div>
+          ) : null}
 
           <Button
             variant="secondary"
@@ -167,7 +225,7 @@ export function ProfilePage() {
             </p>
 
             <p className="mt-2 text-2xl font-semibold text-slate-950">
-              {rbacSnapshot.totalPermissions}
+              {rbacSummary.totalPermissions}
             </p>
           </div>
 
@@ -177,7 +235,7 @@ export function ProfilePage() {
             </p>
 
             <p className="mt-2 text-2xl font-semibold text-emerald-800">
-              {rbacSnapshot.allowedRouteCount}
+              {rbacSummary.allowedRouteCount}
             </p>
           </div>
 
@@ -187,7 +245,7 @@ export function ProfilePage() {
             </p>
 
             <p className="mt-2 text-2xl font-semibold text-red-800">
-              {rbacSnapshot.deniedRouteCount}
+              {rbacSummary.deniedRouteCount}
             </p>
           </div>
         </div>
@@ -196,11 +254,15 @@ export function ProfilePage() {
           <p className="text-sm font-semibold text-slate-800">Menu yang tersedia</p>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            {rbacSnapshot.allowedNavigationLabels.map((label) => (
-              <Badge key={label} tone="info">
-                {label}
-              </Badge>
-            ))}
+            {rbacSummary.allowedNavigationLabels.length > 0 ? (
+              rbacSummary.allowedNavigationLabels.map((label) => (
+                <Badge key={label} tone="info">
+                  {label}
+                </Badge>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">Belum ada menu yang tersedia.</p>
+            )}
           </div>
         </div>
       </Card>

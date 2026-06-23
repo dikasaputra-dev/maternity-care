@@ -1,60 +1,74 @@
 import { useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router';
 
+import { APP_PATHS } from '@/app/router/route-metadata';
+import { getAllowedNavigationItems } from '@/app/router/navigation';
 import { Navbar } from '@/components/layout/navbar';
-import type { ProfileUser } from '@/components/layout/profile-dropdown';
-import { Sidebar, type SidebarNavigationItem } from '@/components/layout/sidebar';
+import { Sidebar } from '@/components/layout/sidebar';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/lib/authorization';
 
 interface AppLayoutProps {
   title: string;
-  user: ProfileUser;
-  navigationItems: readonly SidebarNavigationItem[];
   children: ReactNode;
-  canViewProfile: boolean;
-  canChangePassword: boolean;
-  isLoggingOut: boolean;
-  onProfile: () => void;
-  onChangePassword: () => void;
-  onLogout: () => void;
 }
 
-export function AppLayout({
-  canChangePassword,
-  canViewProfile,
-  children,
-  isLoggingOut,
-  navigationItems,
-  onChangePassword,
-  onLogout,
-  onProfile,
-  title,
-  user,
-}: AppLayoutProps) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+export function AppLayout({ children, title }: AppLayoutProps) {
+  const navigate = useNavigate();
+  const { isLoggingOut, logout, user } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (!user) {
+    return null;
+  }
+
+  const navigationItems = getAllowedNavigationItems(user);
+
+  const canViewProfile = hasPermission(user, PERMISSIONS.PROFILE_VIEW);
+
+  const canChangePassword = hasPermission(user, PERMISSIONS.PROFILE_CHANGE_PASSWORD);
+
+  function openSidebar() {
+    setMobileOpen(true);
+  }
+
+  function closeSidebar() {
+    setMobileOpen(false);
+  }
+
+  function handleProfile() {
+    void navigate(APP_PATHS.PROFILE);
+  }
+
+  function handleChangePassword() {
+    void navigate(APP_PATHS.CHANGE_PASSWORD);
+  }
+
+  function handleLogout() {
+    void logout();
+  }
 
   return (
     <div className="min-h-screen bg-surface">
-      <Sidebar
-        items={navigationItems}
-        mobileOpen={mobileSidebarOpen}
-        onMobileClose={() => setMobileSidebarOpen(false)}
-      />
+      <div className="flex min-h-screen">
+        <Sidebar items={navigationItems} mobileOpen={mobileOpen} onClose={closeSidebar} />
 
-      <div className="min-h-screen lg:pl-72">
-        <Navbar
-          title={title}
-          user={user}
-          canViewProfile={canViewProfile}
-          canChangePassword={canChangePassword}
-          isLoggingOut={isLoggingOut}
-          onMenuClick={() => setMobileSidebarOpen(true)}
-          onProfile={onProfile}
-          onChangePassword={onChangePassword}
-          onLogout={onLogout}
-        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Navbar
+            title={title}
+            user={user}
+            canViewProfile={canViewProfile}
+            canChangePassword={canChangePassword}
+            isLoggingOut={isLoggingOut}
+            onMenuClick={openSidebar}
+            onProfile={handleProfile}
+            onChangePassword={handleChangePassword}
+            onLogout={handleLogout}
+          />
 
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          {children}
-        </main>
+          <main className="flex-1 px-5 py-6 sm:px-8">{children}</main>
+        </div>
       </div>
     </div>
   );

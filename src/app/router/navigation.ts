@@ -1,151 +1,157 @@
-import type { SvgIconProps } from '@mui/material/SvgIcon';
-import type { ElementType } from 'react';
-
 import {
   APP_PATHS,
   ROUTE_METADATA,
-  type AppRouteMetadata,
-  type NavigationRouteMetadata,
-  type PermissionRouteMetadata,
+  type AppPath,
+  type RouteMetadata,
 } from '@/app/router/route-metadata';
 import type { Permission } from '@/features/auth/constants/permissions';
-import { hasPermission } from '@/features/auth/lib/authorization';
 import type { AuthUser } from '@/features/auth/types/auth.types';
 
 export interface AppNavigationItem {
   id: string;
   label: string;
-  to: string;
-  icon: ElementType<SvgIconProps>;
+  path: AppPath;
   permission: Permission;
-  end?: boolean;
 }
 
-function getPathname(path: string) {
-  const pathname = path.split(/[?#]/).at(0);
-
-  if (!pathname?.startsWith('/')) {
-    return APP_PATHS.ROOT;
-  }
-
-  return pathname;
+interface OrderedNavigationItem extends AppNavigationItem {
+  order: number;
 }
 
-function getSegments(path: string) {
-  return path.split('/').filter(Boolean);
+function getSegments(pathname: string) {
+  return pathname.split('/').filter(Boolean);
 }
 
 function isDynamicSegment(segment: string) {
   return segment.startsWith(':');
 }
 
-function isPermissionRoute(route: AppRouteMetadata): route is PermissionRouteMetadata {
-  return route.access === 'permission';
-}
-
-function isNavigationRoute(route: AppRouteMetadata): route is NavigationRouteMetadata {
-  return isPermissionRoute(route) && route.navigation !== undefined;
-}
-
-function matchesRoute(pathname: string, route: AppRouteMetadata) {
-  const routeSegments = getSegments(route.path);
-  const pathSegments = getSegments(pathname);
-
-  if (route.end && routeSegments.length !== pathSegments.length) {
+function matchesRoute(pathname: string, routePath: string) {
+  if (routePath === APP_PATHS.NOT_FOUND) {
     return false;
   }
 
-  if (routeSegments.length > pathSegments.length) {
+  if (pathname === routePath) {
+    return true;
+  }
+
+  const pathnameSegments = getSegments(pathname);
+  const routeSegments = getSegments(routePath);
+
+  if (pathnameSegments.length !== routeSegments.length) {
     return false;
   }
 
   return routeSegments.every((routeSegment, index) => {
-    const pathSegment = pathSegments[index];
+    const currentSegment = pathnameSegments[index];
 
-    return (
-      pathSegment !== undefined && (isDynamicSegment(routeSegment) || routeSegment === pathSegment)
-    );
+    if (!currentSegment) {
+      return false;
+    }
+
+    return isDynamicSegment(routeSegment) || routeSegment === currentSegment;
   });
 }
 
-function getRouteScore(route: AppRouteMetadata) {
-  const segments = getSegments(route.path);
-  const staticSegments = segments.filter((segment) => !isDynamicSegment(segment)).length;
+function getRouteScore(route: RouteMetadata) {
+  return getSegments(route.path).reduce((score, segment) => {
+    if (isDynamicSegment(segment)) {
+      return score + 1;
+    }
 
-  return segments.length * 10 + staticSegments;
+    return score + 2;
+  }, 0);
 }
 
-function findBestMatchingRoute<TRoute extends AppRouteMetadata>(
-  routes: readonly TRoute[],
-  pathname: string,
-) {
-  const matchedRoutes = routes.filter((route) => matchesRoute(pathname, route));
-
-  return (
-    matchedRoutes
-      .sort((firstRoute, secondRoute) => getRouteScore(secondRoute) - getRouteScore(firstRoute))
-      .at(0) ?? null
-  );
-}
-
-export const PERMISSION_ROUTES: readonly PermissionRouteMetadata[] =
-  ROUTE_METADATA.filter(isPermissionRoute);
-
-export const APP_NAVIGATION: readonly AppNavigationItem[] = ROUTE_METADATA.filter(
-  isNavigationRoute,
-).map((route) => ({
-  id: route.id,
-  label: route.navigation.label,
-  to: route.path,
-  icon: route.navigation.icon,
-  permission: route.permission,
-  end: route.end,
-}));
-
-export function getAllowedNavigationItems(user: AuthUser) {
-  return APP_NAVIGATION.filter((item) => hasPermission(user, item.permission));
+function findBestMatchingRoute(pathname: string) {
+  return ROUTE_METADATA.filter((route) => matchesRoute(pathname, route.path)).sort(
+    (a, b) => getRouteScore(b) - getRouteScore(a),
+  )[0];
 }
 
 export function getPageTitle(pathname: string) {
-  const normalizedPathname = getPathname(pathname);
-  const matchedRoute = findBestMatchingRoute(ROUTE_METADATA, normalizedPathname);
-
-  return matchedRoute?.title ?? 'MaternityCare';
+  return findBestMatchingRoute(pathname)?.title ?? 'MaternityCare';
 }
 
-export function getRequiredPermissionForPath(path: string) {
-  const pathname = getPathname(path);
-  const routeRule = findBestMatchingRoute(PERMISSION_ROUTES, pathname);
+export function getAllowedNavigationItems(user: AuthUser | null | undefined): AppNavigationItem[] {
+  if (!user) {
+    return [];
+  }
 
-  return routeRule?.permission ?? null;
+  const items: OrderedNavigationItem[] = [];
+
+  for (const route of ROUTE_METADATA) {
+    if (route.access !== 'permission') {
+      continue;
+    }
+
+    const navigation = route.navigation;
+
+    if (!navigation) {
+      continue;
+    }
+
+    if (!user.permissions.includes(route.permission)) {
+      continue;
+    }
+
+    items.push({
+      id: route.id,
+      label: navigation.label,
+      path: route.path,
+      permission: route.permission,
+      order: navigation.order,
+    });
+  }
+
+  return items
+    .sort((a, b) => a.order - b.order)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      path: item.path,
+      permission: item.permission,
+    }));
 }
 
-export function canAccessProtectedPath(user: AuthUser, path: string) {
-  const requiredPermission = getRequiredPermissionForPath(path);
+export function canAccessProtectedPath(user: AuthUser | null | undefined, pathname: string) {
+  const route = findBestMatchingRoute(pathname);
 
-  if (!requiredPermission) {
+  if (!route) {
     return false;
   }
 
-  return hasPermission(user, requiredPermission);
+  if (route.access === 'public-only') {
+    return true;
+  }
+
+  if (!user) {
+    return false;
+  }
+
+  if (route.access === 'authenticated') {
+    return true;
+  }
+
+  if (route.access !== 'permission') {
+    return false;
+  }
+
+  return user.permissions.includes(route.permission);
 }
 
 export function getDefaultAuthenticatedPath(user: AuthUser) {
-  const allowedNavigationPath = getAllowedNavigationItems(user).at(0)?.to;
+  const firstAllowedNavigationItem = getAllowedNavigationItems(user)[0];
 
-  if (allowedNavigationPath) {
-    return allowedNavigationPath;
-  }
-
-  const firstAllowedPermissionRoute = PERMISSION_ROUTES.find((route) =>
-    hasPermission(user, route.permission),
-  );
-
-  return firstAllowedPermissionRoute?.path ?? APP_PATHS.UNAUTHORIZED;
+  return firstAllowedNavigationItem?.path ?? APP_PATHS.PROFILE;
 }
 
 export function resolvePostLoginPath(user: AuthUser, requestedPath?: string) {
-  if (requestedPath?.startsWith('/') && canAccessProtectedPath(user, requestedPath)) {
+  if (
+    requestedPath &&
+    requestedPath !== APP_PATHS.LOGIN &&
+    canAccessProtectedPath(user, requestedPath)
+  ) {
     return requestedPath;
   }
 

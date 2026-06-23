@@ -30,6 +30,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isRefreshingUser, setIsRefreshingUser] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   const user = session?.user ?? null;
@@ -43,20 +45,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (!storedSession) {
       setSession(null);
+      setLastSyncedAt(null);
+
       return null;
     }
 
-    const syncedUser = await getAuthenticatedUser();
+    setIsRefreshingUser(true);
 
-    const nextSession: AuthSession = {
-      ...storedSession,
-      user: syncedUser,
-    };
+    try {
+      const syncedUser = await getAuthenticatedUser();
 
-    saveAuthSession(nextSession);
-    setSession(nextSession);
+      const nextSession: AuthSession = {
+        ...storedSession,
+        user: syncedUser,
+      };
 
-    return syncedUser;
+      saveAuthSession(nextSession);
+      setSession(nextSession);
+      setLastSyncedAt(new Date().toISOString());
+
+      return syncedUser;
+    } finally {
+      setIsRefreshingUser(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -68,6 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!storedSession) {
         if (isActive) {
           setSession(null);
+          setLastSyncedAt(null);
           setLoading(false);
         }
 
@@ -88,11 +100,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         saveAuthSession(nextSession);
         setSession(nextSession);
+        setLastSyncedAt(new Date().toISOString());
       } catch {
         clearAuthSession();
 
         if (isActive) {
           setSession(null);
+          setLastSyncedAt(null);
           setAuthNotice('Sesi berakhir. Silakan login kembali.');
         }
       } finally {
@@ -113,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return onUnauthorized(() => {
       clearAuthSession();
       setSession(null);
+      setLastSyncedAt(null);
       setAuthNotice('Sesi berakhir. Silakan login kembali.');
     });
   }, []);
@@ -122,6 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     saveAuthSession(nextSession);
     setSession(nextSession);
+    setLastSyncedAt(new Date().toISOString());
     setAuthNotice(null);
 
     return nextSession.user;
@@ -132,6 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     saveAuthSession(nextSession);
     setSession(nextSession);
+    setLastSyncedAt(new Date().toISOString());
     setAuthNotice(null);
 
     return nextSession.user;
@@ -147,6 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       clearAuthSession();
       setSession(null);
+      setLastSyncedAt(null);
       setIsLoggingOut(false);
     }
   }
@@ -160,6 +178,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     session,
     loading,
     isLoggingOut,
+    isRefreshingUser,
+    lastSyncedAt,
     authNotice,
 
     loginNurse: handleLoginNurse,

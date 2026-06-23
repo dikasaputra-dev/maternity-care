@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
 
+import { APP_PATHS } from '@/app/router/route-metadata';
 import type { Permission } from '@/features/auth/constants/permissions';
-import { useAuth } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/lib/authorization';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 
 interface RequirePermissionProps {
   permission: Permission;
@@ -11,28 +12,24 @@ interface RequirePermissionProps {
 }
 
 export function RequirePermission({ children, permission }: RequirePermissionProps) {
-  const { user } = useAuth();
   const location = useLocation();
+  const { loading, user } = useAuth();
+
+  if (loading) {
+    return null;
+  }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{
-          from: `${location.pathname}${location.search}`,
-        }}
-      />
-    );
+    return <Navigate to={APP_PATHS.LOGIN} replace state={{ from: location.pathname }} />;
   }
 
   if (!hasPermission(user, permission)) {
     return (
       <Navigate
-        to="/unauthorized"
+        to={APP_PATHS.UNAUTHORIZED}
         replace
         state={{
-          from: `${location.pathname}${location.search}`,
+          from: location.pathname,
           requiredPermission: permission,
         }}
       />

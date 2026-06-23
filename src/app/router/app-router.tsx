@@ -12,11 +12,11 @@ import { DashboardPage } from '@/pages/dashboard-page';
 import { LoginPage } from '@/pages/login-page';
 import { ModulePreviewPage } from '@/pages/module-preview-page';
 import { NotFoundPage } from '@/pages/not-found-page';
+import { PatientCreatePage } from '@/pages/patient-create-page';
+import { PatientDetailPage } from '@/pages/patient-detail-page';
+import { PatientsPage } from '@/pages/patients-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
-import { PatientsPage } from '@/pages/patients-page';
-import { PatientDetailPage } from '@/pages/patient-detail-page';
-import { PatientCreatePage } from '@/pages/patient-create-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -76,7 +76,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.SCREENINGS_LIST}>
                 <ModulePreviewPage
                   title="Skrining"
-                  description="Directory skrining menggunakan permission dari Laravel API."
+                  description="Fitur skrining akan dibangun setelah data pasien selesai terhubung dengan backend."
                   requiredPermission={PERMISSIONS.SCREENINGS_LIST}
                   actionPermission={PERMISSIONS.SCREENINGS_CREATE}
                   actionDescription="User memiliki izin untuk membuat skrining baru."
@@ -90,7 +90,7 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.HISTORY_VIEW_OWN}>
                 <ModulePreviewPage
                   title="Riwayat"
-                  description="Backend wajib membatasi riwayat Nurse hanya pada data miliknya."
+                  description="Riwayat klinis akan mengikuti data skrining dari backend."
                   requiredPermission={PERMISSIONS.HISTORY_VIEW_OWN}
                 />
               </RequirePermission>
@@ -102,10 +102,24 @@ export const appRouter = createBrowserRouter([
               <RequirePermission permission={PERMISSIONS.REPORTS_VIEW}>
                 <ModulePreviewPage
                   title="Laporan"
-                  description="Laporan pasien mengikuti permission yang dikirim backend."
+                  description="Laporan pasien akan dibangun setelah data klinis tersedia."
                   requiredPermission={PERMISSIONS.REPORTS_VIEW}
                   actionPermission={PERMISSIONS.REPORTS_EXPORT}
                   actionDescription="User memiliki izin untuk mengekspor laporan."
+                />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.STUDENTS,
+            element: (
+              <RequirePermission permission={PERMISSIONS.STUDENTS_LIST}>
+                <ModulePreviewPage
+                  title="Data Mahasiswa"
+                  description="Manajemen mahasiswa hanya tersedia untuk user dengan permission students.list."
+                  requiredPermission={PERMISSIONS.STUDENTS_LIST}
+                  actionPermission={PERMISSIONS.STUDENTS_CREATE}
+                  actionDescription="User memiliki izin untuk menambahkan akun mahasiswa."
                 />
               </RequirePermission>
             ),
@@ -123,20 +137,6 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.PROFILE_CHANGE_PASSWORD}>
                 <ChangePasswordPage />
-              </RequirePermission>
-            ),
-          },
-          {
-            path: APP_PATHS.STUDENTS,
-            element: (
-              <RequirePermission permission={PERMISSIONS.STUDENTS_LIST}>
-                <ModulePreviewPage
-                  title="Data Mahasiswa"
-                  description="Route hanya dapat dibuka oleh user dengan students.list."
-                  requiredPermission={PERMISSIONS.STUDENTS_LIST}
-                  actionPermission={PERMISSIONS.STUDENTS_CREATE}
-                  actionDescription="User memiliki izin untuk menambahkan akun mahasiswa."
-                />
               </RequirePermission>
             ),
           },

@@ -1,114 +1,103 @@
-import CloseIcon from '@mui/icons-material/Close';
-import type { SvgIconProps } from '@mui/material/SvgIcon';
-import type { ElementType } from 'react';
+import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import type { SvgIconComponent } from '@mui/icons-material';
 import { NavLink } from 'react-router';
 
+import { APP_PATHS, type AppPath } from '@/app/router/route-metadata';
 import { cn } from '@/lib/cn';
-import { BrandLogo } from '@/components/brand/brand-logo';
 
 export interface SidebarNavigationItem {
   id: string;
   label: string;
-  to: string;
-  icon: ElementType<SvgIconProps>;
-  end?: boolean;
+  path: AppPath;
 }
 
 interface SidebarProps {
   items: readonly SidebarNavigationItem[];
-  mobileOpen: boolean;
-  onMobileClose: () => void;
+  mobileOpen?: boolean;
+  onClose?: () => void;
 }
 
-interface SidebarPanelProps {
-  items: readonly SidebarNavigationItem[];
-  showCloseButton?: boolean;
-  onClose: () => void;
+function getNavigationIcon(path: AppPath): SvgIconComponent | null {
+  switch (path) {
+    case APP_PATHS.DASHBOARD:
+      return DashboardOutlinedIcon;
+
+    case APP_PATHS.PATIENTS:
+      return PeopleAltOutlinedIcon;
+
+    case APP_PATHS.SCREENINGS:
+      return FactCheckOutlinedIcon;
+
+    case APP_PATHS.HISTORY:
+      return HistoryOutlinedIcon;
+
+    case APP_PATHS.REPORTS:
+      return DescriptionOutlinedIcon;
+
+    case APP_PATHS.STUDENTS:
+      return GroupsOutlinedIcon;
+
+    default:
+      return null;
+  }
 }
 
-function SidebarPanel({ items, onClose, showCloseButton = false }: SidebarPanelProps) {
-  return (
-    <div className="flex h-full flex-col bg-white text-slate-900">
-      <div className="flex min-h-16 items-center justify-between border-b border-brand-100 px-5">
-        <div className="flex items-center gap-3">
-          <BrandLogo className="h-10 w-10 shrink-0" />
-
-          <div>
-            <p className="text-sm font-semibold text-slate-900">MaternityCare</p>
-
-            <p className="text-xs text-brand-600">Clinical Workspace</p>
-          </div>
-        </div>
-
-        {showCloseButton ? (
-          <button
-            type="button"
-            aria-label="Tutup navigasi"
-            onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            <CloseIcon aria-hidden="true" fontSize="small" />
-          </button>
-        ) : null}
-      </div>
-
-      <nav aria-label="Navigasi utama" className="flex-1 space-y-1.5 overflow-y-auto p-4">
-        {items.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.id}
-              to={item.to}
-              end={item.end}
-              onClick={onClose}
-              className={({ isActive }) =>
-                cn(
-                  'flex min-h-11 w-full items-center gap-3 rounded-lg border px-3 text-sm font-medium transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
-                  isActive
-                    ? 'border-brand-200 bg-brand-50 text-brand-700 shadow-sm'
-                    : 'border-transparent text-slate-600 hover:border-brand-100 hover:bg-brand-50/70 hover:text-brand-700',
-                )
-              }
-            >
-              <Icon aria-hidden="true" fontSize="small" />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      <div className="border-t border-brand-100 bg-brand-50/40 px-5 py-4">
-        <p className="text-xs leading-5 text-slate-500">
-          Menu ditampilkan berdasarkan permission dari backend.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-export function Sidebar({ items, mobileOpen, onMobileClose }: SidebarProps) {
+export function Sidebar({ items, mobileOpen = false, onClose }: SidebarProps) {
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-brand-100 bg-white lg:block">
-        <SidebarPanel items={items} onClose={onMobileClose} />
-      </aside>
-
       {mobileOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            aria-label="Tutup navigasi"
-            onClick={onMobileClose}
-            className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
-          />
-
-          <aside className="relative z-10 h-full w-[min(18rem,85vw)] border-r border-brand-100 bg-white shadow-xl">
-            <SidebarPanel items={items} showCloseButton onClose={onMobileClose} />
-          </aside>
-        </div>
+        <button
+          type="button"
+          aria-label="Tutup sidebar"
+          className="fixed inset-0 z-30 bg-slate-950/30 lg:hidden"
+          onClick={onClose}
+        />
       ) : null}
+
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white px-4 py-5 transition-transform lg:static lg:translate-x-0',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        <div>
+          <p className="text-lg font-semibold text-slate-950">MaternityCare</p>
+
+          <p className="mt-1 text-sm text-brand-700">Universitas Bhakti Kencana</p>
+        </div>
+
+        <nav className="mt-8 space-y-1">
+          {items.map((item) => {
+            const Icon = getNavigationIcon(item.path);
+
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                end={item.path === APP_PATHS.PATIENTS}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    'flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors',
+                    isActive
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950',
+                  )
+                }
+              >
+                {Icon ? <Icon aria-hidden="true" fontSize="small" /> : null}
+
+                {item.label}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </aside>
     </>
   );
 }

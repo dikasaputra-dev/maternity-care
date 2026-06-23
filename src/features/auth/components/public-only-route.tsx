@@ -1,19 +1,23 @@
+import type { ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router';
 
 import { getDefaultAuthenticatedPath } from '@/app/router/navigation';
-import { AuthLoadingScreen } from '@/features/auth/components/auth-loading-screen';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
-export function PublicOnlyRoute() {
-  const { isAuthenticated, isInitializing, user } = useAuth();
+interface PublicOnlyRouteProps {
+  children?: ReactNode;
+}
 
-  if (isInitializing) {
-    return <AuthLoadingScreen />;
+export function PublicOnlyRoute({ children }: PublicOnlyRouteProps) {
+  const { loading, user } = useAuth();
+
+  if (loading) {
+    return null;
   }
 
-  if (isAuthenticated && user) {
+  if (user) {
     return <Navigate to={getDefaultAuthenticatedPath(user)} replace />;
   }
 
-  return <Outlet />;
+  return children ?? <Outlet />;
 }

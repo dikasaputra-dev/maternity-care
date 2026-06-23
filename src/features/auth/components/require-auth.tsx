@@ -1,29 +1,28 @@
+import type { ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router';
 
-import { AuthLoadingScreen } from '@/features/auth/components/auth-loading-screen';
+import { APP_PATHS } from '@/app/router/route-metadata';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
-export function RequireAuth() {
-  const { isAuthenticated, isInitializing } = useAuth();
+interface RequireAuthProps {
+  children?: ReactNode;
+}
+
+export function RequireAuth({ children }: RequireAuthProps) {
   const location = useLocation();
+  const { loading, user } = useAuth();
 
-  if (isInitializing) {
-    return <AuthLoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    const redirectPath = `${location.pathname}${location.search}`;
-
+  if (loading) {
     return (
-      <Navigate
-        to="/login"
-        replace
-        state={{
-          from: redirectPath,
-        }}
-      />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm font-medium text-slate-600">Memulihkan sesi...</p>
+      </div>
     );
   }
 
-  return <Outlet />;
+  if (!user) {
+    return <Navigate to={APP_PATHS.LOGIN} replace state={{ from: location.pathname }} />;
+  }
+
+  return children ?? <Outlet />;
 }

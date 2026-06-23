@@ -13,6 +13,8 @@ export interface AuthContextValue {
   session: AuthSession | null;
   loading: boolean;
   isLoggingOut: boolean;
+  isRefreshingUser: boolean;
+  lastSyncedAt: string | null;
   authNotice: string | null;
 
   loginNurse: (payload: NurseLoginPayload) => Promise<AuthUser>;

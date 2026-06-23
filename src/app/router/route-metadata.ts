@@ -1,37 +1,34 @@
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
-import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
-import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import type { SvgIconProps } from '@mui/material/SvgIcon';
-import type { ElementType } from 'react';
-
-import { PERMISSIONS, type Permission } from '@/features/auth/constants/permissions';
+import type { Permission } from '@/features/auth/constants/permissions';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
 
 export const APP_PATHS = {
   ROOT: '/',
   LOGIN: '/login',
+
   DASHBOARD: '/dashboard',
+
   PATIENTS: '/patients',
   PATIENT_CREATE: '/patients/create',
   PATIENT_DETAIL: '/patients/:patientId',
+
   SCREENINGS: '/screenings',
   HISTORY: '/history',
   REPORTS: '/reports',
+
   PROFILE: '/profile',
   CHANGE_PASSWORD: '/profile/change-password',
+
   STUDENTS: '/admin/students',
+
   UNAUTHORIZED: '/unauthorized',
+  NOT_FOUND: '*',
 } as const;
 
 export type AppPath = (typeof APP_PATHS)[keyof typeof APP_PATHS];
 
-export type RouteAccess = 'public' | 'public-only' | 'authenticated' | 'permission';
-
 export interface NavigationMetadata {
   label: string;
-  icon: ElementType<SvgIconProps>;
+  order: number;
 }
 
 interface BaseRouteMetadata {
@@ -53,26 +50,14 @@ export interface PermissionRouteMetadata extends BaseRouteMetadata {
   navigation?: NavigationMetadata;
 }
 
-export type AppRouteMetadata = PublicRouteMetadata | PermissionRouteMetadata;
+export type RouteMetadata = PublicRouteMetadata | PermissionRouteMetadata;
 
-export type NavigationRouteMetadata = PermissionRouteMetadata & {
-  navigation: NavigationMetadata;
-};
-
-export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
-  {
-    id: 'root',
-    path: APP_PATHS.ROOT,
-    title: 'MaternityCare',
-    access: 'authenticated',
-    end: true,
-  },
+export const ROUTE_METADATA = [
   {
     id: 'login',
     path: APP_PATHS.LOGIN,
     title: 'Login',
     access: 'public-only',
-    end: true,
   },
   {
     id: 'dashboard',
@@ -82,9 +67,8 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     permission: PERMISSIONS.DASHBOARD_VIEW,
     navigation: {
       label: 'Dashboard',
-      icon: DashboardOutlinedIcon,
+      order: 10,
     },
-    end: true,
   },
   {
     id: 'patients',
@@ -92,9 +76,10 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     title: 'Pasien',
     access: 'permission',
     permission: PERMISSIONS.PATIENTS_LIST,
+    end: true,
     navigation: {
       label: 'Pasien',
-      icon: PeopleAltOutlinedIcon,
+      order: 20,
     },
   },
   {
@@ -121,7 +106,7 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     permission: PERMISSIONS.SCREENINGS_LIST,
     navigation: {
       label: 'Skrining',
-      icon: FactCheckOutlinedIcon,
+      order: 30,
     },
   },
   {
@@ -132,7 +117,7 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     permission: PERMISSIONS.HISTORY_VIEW_OWN,
     navigation: {
       label: 'Riwayat',
-      icon: HistoryOutlinedIcon,
+      order: 40,
     },
   },
   {
@@ -143,7 +128,7 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     permission: PERMISSIONS.REPORTS_VIEW,
     navigation: {
       label: 'Laporan',
-      icon: DescriptionOutlinedIcon,
+      order: 50,
     },
   },
   {
@@ -170,7 +155,7 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     permission: PERMISSIONS.STUDENTS_LIST,
     navigation: {
       label: 'Data Mahasiswa',
-      icon: SchoolOutlinedIcon,
+      order: 90,
     },
   },
   {
@@ -178,6 +163,5 @@ export const ROUTE_METADATA: readonly AppRouteMetadata[] = [
     path: APP_PATHS.UNAUTHORIZED,
     title: 'Akses Ditolak',
     access: 'authenticated',
-    end: true,
   },
-];
+] satisfies RouteMetadata[];
