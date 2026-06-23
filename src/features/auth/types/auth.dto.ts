@@ -1,18 +1,44 @@
-import type { ApiSuccessResponse } from '@/api/api.types';
+export type AuthRoleDto = 'nurse' | 'admin';
 
 export interface AuthUserDto {
   id: number;
   name: string;
   nim: string | null;
   email: string | null;
-  role: string;
+  role: AuthRoleDto;
   permissions: string[];
 }
 
-export type LoginResponseDto = ApiSuccessResponse<{
-  token: string;
-  token_type: string;
-  user: AuthUserDto;
-}>;
+export interface LoginResponseDto {
+  message: string;
+  data: {
+    token: string;
+    token_type: string;
+    user: AuthUserDto;
+  };
+}
 
-export type CurrentUserResponseDto = ApiSuccessResponse<AuthUserDto>;
+export interface MeResponseDto {
+  message: string;
+  data: AuthUserDto;
+}
+
+export interface MessageResponseDto {
+  message: string;
+}
+
+export interface NurseLoginRequestDto {
+  nim: string;
+  password: string;
+}
+
+export interface AdminLoginRequestDto {
+  email: string;
+  password: string;
+}
+
+export interface ChangePasswordRequestDto {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}

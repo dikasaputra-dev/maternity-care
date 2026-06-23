@@ -13,8 +13,7 @@ import type { AuthRole, AuthUser } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/cn';
 import { BrandLogo } from '@/components/brand/brand-logo';
 
-const NIM_PATTERN = /^\d{3}[A-Z]{2}\d{5}$/;
-
+const NIM_PATTERN = /^\d{3}[A-Za-z]{2}\d{5}$/;
 interface RedirectState {
   from?: string;
 }
@@ -27,9 +26,8 @@ export function LoginPage() {
 
   const [accountType, setAccountType] = useState<AuthRole>('nurse');
 
-  const [identifier, setIdentifier] = useState('251FK05002');
-
-  const [password, setPassword] = useState('password');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
 
   const [identifierError, setIdentifierError] = useState<string | undefined>();
 
@@ -53,16 +51,14 @@ export function LoginPage() {
 
     setAccountType(role);
 
-    setIdentifier(role === 'nurse' ? '251FK05002' : 'admin@example.com');
+    setIdentifier('');
 
-    setPassword('password');
+    setPassword('');
     resetErrors();
   }
 
   function handleIdentifierChange(value: string) {
-    const normalizedValue = accountType === 'nurse' ? value.toUpperCase() : value;
-
-    setIdentifier(normalizedValue);
+    setIdentifier(value);
     setIdentifierError(undefined);
     setFormError(null);
     clearAuthNotice();
@@ -303,24 +299,6 @@ export function LoginPage() {
               Masuk
             </Button>
           </form>
-
-          {import.meta.env.VITE_AUTH_MODE !== 'api' ? (
-            <div className="mt-6 rounded-xl border border-brand-100 bg-brand-50/60 p-4">
-              <p className="text-sm font-semibold text-slate-800">Akun preview</p>
-
-              {accountType === 'nurse' ? (
-                <div className="mt-2 space-y-1 text-sm text-slate-600">
-                  <p>NIM: 251FK05002</p>
-                  <p>Password: password</p>
-                </div>
-              ) : (
-                <div className="mt-2 space-y-1 text-sm text-slate-600">
-                  <p>Email: admin@example.com</p>
-                  <p>Password: password</p>
-                </div>
-              )}
-            </div>
-          ) : null}
         </div>
       </section>
     </main>

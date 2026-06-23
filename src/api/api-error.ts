@@ -1,23 +1,23 @@
-import axios from 'axios';
-
-import type { ApiFieldErrors } from '@/api/api.types';
-
-export type ValidationErrors = ApiFieldErrors;
+export type ApiValidationErrors = Record<string, string[]>;
 
 export class ApiError extends Error {
-  readonly status: number | null;
-  readonly validationErrors: ApiFieldErrors;
+  status?: number;
+  errors: ApiValidationErrors;
+  validationErrors: ApiValidationErrors;
 
   constructor(
     message: string,
-    status: number | null = null,
-    validationErrors: ApiFieldErrors = {},
+    options?: {
+      status?: number;
+      errors?: ApiValidationErrors;
+    },
   ) {
     super(message);
 
     this.name = 'ApiError';
-    this.status = status;
-    this.validationErrors = validationErrors;
+    this.status = options?.status;
+    this.errors = options?.errors ?? {};
+    this.validationErrors = this.errors;
   }
 }
 
@@ -25,28 +25,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function readMessage(value: unknown) {
-  if (!isRecord(value) || typeof value.message !== 'string') {
-    return null;
+function parseValidationErrors(value: unknown): ApiValidationErrors | undefined {
+  if (!isRecord(value)) {
+    return undefined;
   }
 
-  return value.message;
-}
+  const errors: ApiValidationErrors = {};
 
-function readValidationErrors(value: unknown): ApiFieldErrors {
-  if (!isRecord(value) || !isRecord(value.errors)) {
-    return {};
-  }
+  for (const [field, messages] of Object.entries(value)) {
+    if (!Array.isArray(messages)) {
+      continue;
+    }
 
-  const validationErrors: ApiFieldErrors = {};
+    const validMessages = messages.filter(
+      (message): message is string => typeof message === 'string',
+    );
 
-  for (const [field, messages] of Object.entries(value.errors)) {
-    if (Array.isArray(messages) && messages.every((message) => typeof message === 'string')) {
-      validationErrors[field] = messages;
+    if (validMessages.length > 0) {
+      errors[field] = validMessages;
     }
   }
 
-  return validationErrors;
+  return Object.keys(errors).length > 0 ? errors : undefined;
 }
 
 export function toApiError(error: unknown): ApiError {
@@ -54,22 +54,31 @@ export function toApiError(error: unknown): ApiError {
     return error;
   }
 
-  if (axios.isAxiosError<unknown>(error)) {
-    const responseData: unknown = error.response?.data;
-    const status = error.response?.status ?? null;
-
-    const message =
-      readMessage(responseData) ??
-      (error.code === 'ECONNABORTED'
-        ? 'Permintaan terlalu lama. Silakan coba kembali.'
-        : 'Tidak dapat terhubung ke server.');
-
-    return new ApiError(message, status, readValidationErrors(responseData));
+  if (!isRecord(error)) {
+    return new ApiError('Terjadi kesalahan yang tidak diketahui.');
   }
 
-  if (error instanceof Error) {
-    return new ApiError(error.message);
+  const response = error.response;
+
+  if (!isRecord(response)) {
+    return new ApiError('Terjadi kesalahan jaringan.');
   }
 
-  return new ApiError('Terjadi kesalahan yang tidak diketahui.');
+  const status = typeof response.status === 'number' ? response.status : undefined;
+
+  const data = response.data;
+
+  if (!isRecord(data)) {
+    return new ApiError('Terjadi kesalahan dari server.', {
+      status,
+    });
+  }
+
+  const message =
+    typeof data.message === 'string' ? data.message : 'Terjadi kesalahan dari server.';
+
+  return new ApiError(message, {
+    status,
+    errors: parseValidationErrors(data.errors),
+  });
 }

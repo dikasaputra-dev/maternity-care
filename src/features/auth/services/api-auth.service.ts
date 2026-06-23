@@ -1,58 +1,53 @@
-import { toApiError } from '@/api/api-error';
 import {
-  getCurrentUser,
+  getMe,
   patchChangePassword,
   postAdminLogin,
   postLogout,
   postNurseLogin,
 } from '@/features/auth/api/auth.api';
-import { mapCurrentUserResponse, mapLoginResponse } from '@/features/auth/mapper/auth.mapper';
-import type { AuthService } from '@/features/auth/services/auth.service';
+import {
+  mapLoginResponse,
+  mapMeResponse,
+  mapMessageResponse,
+} from '@/features/auth/mapper/auth.mapper';
+import type {
+  AdminLoginPayload,
+  AuthSession,
+  AuthUser,
+  ChangePasswordPayload,
+  NurseLoginPayload,
+} from '@/features/auth/types/auth.types';
 
-export const apiAuthService: AuthService = {
-  async loginNurse(payload) {
-    try {
-      const response = await postNurseLogin(payload);
+async function loginAndSyncUser(
+  loginResponse: unknown,
+  expectedRole: 'nurse' | 'admin',
+): Promise<AuthSession> {
+  const loginSession = mapLoginResponse(loginResponse, expectedRole);
 
-      return mapLoginResponse(response, 'nurse');
-    } catch (error: unknown) {
-      throw toApiError(error);
-    }
-  },
+  const syncedUser = mapMeResponse(await getMe(loginSession.accessToken));
 
-  async loginAdmin(payload) {
-    try {
-      const response = await postAdminLogin(payload);
+  return {
+    ...loginSession,
+    user: syncedUser,
+  };
+}
 
-      return mapLoginResponse(response, 'admin');
-    } catch (error: unknown) {
-      throw toApiError(error);
-    }
-  },
+export async function loginNurse(payload: NurseLoginPayload): Promise<AuthSession> {
+  return loginAndSyncUser(await postNurseLogin(payload), 'nurse');
+}
 
-  async getCurrentUser() {
-    try {
-      const response = await getCurrentUser();
+export async function loginAdmin(payload: AdminLoginPayload): Promise<AuthSession> {
+  return loginAndSyncUser(await postAdminLogin(payload), 'admin');
+}
 
-      return mapCurrentUserResponse(response);
-    } catch (error: unknown) {
-      throw toApiError(error);
-    }
-  },
+export async function getAuthenticatedUser(): Promise<AuthUser> {
+  return mapMeResponse(await getMe());
+}
 
-  async changePassword(payload) {
-    try {
-      await patchChangePassword(payload);
-    } catch (error: unknown) {
-      throw toApiError(error);
-    }
-  },
+export async function logout(): Promise<string> {
+  return mapMessageResponse(await postLogout());
+}
 
-  async logout() {
-    try {
-      await postLogout();
-    } catch (error: unknown) {
-      throw toApiError(error);
-    }
-  },
-};
+export async function changePassword(payload: ChangePasswordPayload): Promise<string> {
+  return mapMessageResponse(await patchChangePassword(payload));
+}

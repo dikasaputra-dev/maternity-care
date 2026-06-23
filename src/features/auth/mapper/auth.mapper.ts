@@ -1,99 +1,89 @@
+import { ApiError } from '@/api/api-error';
 import { isPermission } from '@/features/auth/constants/permissions';
-import type { AuthRole, AuthSession, AuthUser } from '@/features/auth/types/auth.types';
+import type { AuthUserDto } from '@/features/auth/types/auth.dto';
+import type { AuthSession, AuthUser, Role } from '@/features/auth/types/auth.types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function readRequiredString(record: Record<string, unknown>, key: string) {
-  const value = record[key];
-
-  if (typeof value !== 'string' || value.trim() === '') {
-    throw new Error(`Invalid authentication response field: ${key}.`);
-  }
-
-  return value;
+function isRole(value: unknown): value is Role {
+  return value === 'nurse' || value === 'admin';
 }
 
-function readNullableString(record: Record<string, unknown>, key: string) {
-  const value = record[key];
-
-  if (value === null) {
-    return null;
-  }
-
-  if (typeof value !== 'string') {
-    throw new Error(`Invalid authentication response field: ${key}.`);
-  }
-
-  return value;
-}
-
-function mapRole(value: unknown): AuthRole {
-  if (value === 'nurse' || value === 'admin') {
-    return value;
-  }
-
-  throw new Error('Invalid authentication role.');
-}
-
-function mapPermissions(value: unknown) {
-  if (!Array.isArray(value)) {
-    throw new Error('Invalid authentication permissions.');
-  }
-
-  return [...new Set(value.filter(isPermission))];
-}
-
-function mapAuthUser(value: unknown): AuthUser {
+function parseAuthUserDto(value: unknown): AuthUserDto {
   if (!isRecord(value)) {
-    throw new Error('Invalid authenticated user response.');
+    throw new ApiError('Format user dari server tidak valid.');
   }
 
-  if (typeof value.id !== 'number' || !Number.isInteger(value.id)) {
-    throw new Error('Invalid authenticated user ID.');
+  if (
+    typeof value.id !== 'number' ||
+    typeof value.name !== 'string' ||
+    !isRole(value.role) ||
+    !Array.isArray(value.permissions)
+  ) {
+    throw new ApiError('Format user dari server tidak lengkap.');
   }
 
   return {
     id: value.id,
-    name: readRequiredString(value, 'name'),
-    nim: readNullableString(value, 'nim'),
-    email: readNullableString(value, 'email'),
-    role: mapRole(value.role),
-    permissions: mapPermissions(value.permissions),
+    name: value.name,
+    nim: typeof value.nim === 'string' ? value.nim : null,
+    email: typeof value.email === 'string' ? value.email : null,
+    role: value.role,
+    permissions: value.permissions.filter(
+      (permission): permission is string => typeof permission === 'string',
+    ),
   };
 }
 
-export function mapLoginResponse(value: unknown, expectedRole: AuthRole): AuthSession {
-  if (!isRecord(value) || !isRecord(value.data)) {
-    throw new Error('Invalid login response.');
+function mapAuthUserDto(dto: AuthUserDto): AuthUser {
+  return {
+    id: dto.id,
+    name: dto.name,
+    nim: dto.nim,
+    email: dto.email,
+    role: dto.role,
+    permissions: dto.permissions.filter(isPermission),
+  };
+}
+
+export function mapLoginResponse(response: unknown, expectedRole: Role): AuthSession {
+  if (!isRecord(response) || !isRecord(response.data)) {
+    throw new ApiError('Format response login tidak valid.');
   }
 
-  const token = readRequiredString(value.data, 'token');
+  const data = response.data;
 
-  const tokenType = readRequiredString(value.data, 'token_type');
-
-  if (tokenType !== 'Bearer') {
-    throw new Error('Unsupported authentication token type.');
+  if (typeof data.token !== 'string' || typeof data.token_type !== 'string') {
+    throw new ApiError('Token login dari server tidak valid.');
   }
 
-  const user = mapAuthUser(value.data.user);
+  const user = mapAuthUserDto(parseAuthUserDto(data.user));
 
   if (user.role !== expectedRole) {
-    throw new Error('The authenticated account role does not match the selected login type.');
+    throw new ApiError('Role user tidak sesuai dengan endpoint login.');
   }
 
   return {
-    accessToken: token,
-    tokenType: 'Bearer',
+    accessToken: data.token,
+    tokenType: data.token_type,
     user,
   };
 }
 
-export function mapCurrentUserResponse(value: unknown): AuthUser {
-  if (!isRecord(value)) {
-    throw new Error('Invalid current user response.');
+export function mapMeResponse(response: unknown): AuthUser {
+  if (!isRecord(response) || !isRecord(response.data)) {
+    throw new ApiError('Format response /me tidak valid.');
   }
 
-  return mapAuthUser(value.data);
+  return mapAuthUserDto(parseAuthUserDto(response.data));
+}
+
+export function mapMessageResponse(response: unknown) {
+  if (!isRecord(response)) {
+    return 'Berhasil.';
+  }
+
+  return typeof response.message === 'string' ? response.message : 'Berhasil.';
 }

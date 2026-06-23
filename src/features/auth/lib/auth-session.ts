@@ -1,5 +1,5 @@
 import { isPermission } from '@/features/auth/constants/permissions';
-import type { AuthRole, AuthSession, AuthUser } from '@/features/auth/types/auth.types';
+import type { AuthSession, AuthUser, Role } from '@/features/auth/types/auth.types';
 
 const AUTH_SESSION_KEY = 'maternity-care.auth-session';
 
@@ -7,68 +7,78 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function isNullableString(value: unknown): value is string | null {
-  return typeof value === 'string' || value === null;
-}
-
-function isAuthRole(value: unknown): value is AuthRole {
+function isRole(value: unknown): value is Role {
   return value === 'nurse' || value === 'admin';
 }
 
-function isAuthUser(value: unknown): value is AuthUser {
+function parseAuthUser(value: unknown): AuthUser | null {
   if (!isRecord(value)) {
-    return false;
+    return null;
   }
 
-  return (
-    typeof value.id === 'number' &&
-    typeof value.name === 'string' &&
-    isNullableString(value.nim) &&
-    isNullableString(value.email) &&
-    isAuthRole(value.role) &&
-    Array.isArray(value.permissions) &&
-    value.permissions.every(isPermission)
-  );
-}
-
-function isAuthSession(value: unknown): value is AuthSession {
-  if (!isRecord(value)) {
-    return false;
+  if (
+    typeof value.id !== 'number' ||
+    typeof value.name !== 'string' ||
+    !isRole(value.role) ||
+    !Array.isArray(value.permissions)
+  ) {
+    return null;
   }
 
-  return (
-    typeof value.accessToken === 'string' && value.tokenType === 'Bearer' && isAuthUser(value.user)
-  );
+  return {
+    id: value.id,
+    name: value.name,
+    nim: typeof value.nim === 'string' ? value.nim : null,
+    email: typeof value.email === 'string' ? value.email : null,
+    role: value.role,
+    permissions: value.permissions.filter(isPermission),
+  };
 }
 
-export function readAuthSession(): AuthSession | null {
-  const storedSession = sessionStorage.getItem(AUTH_SESSION_KEY);
+function parseAuthSession(value: unknown): AuthSession | null {
+  if (!isRecord(value)) {
+    return null;
+  }
 
-  if (!storedSession) {
+  if (typeof value.accessToken !== 'string' || typeof value.tokenType !== 'string') {
+    return null;
+  }
+
+  const user = parseAuthUser(value.user);
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    accessToken: value.accessToken,
+    tokenType: value.tokenType,
+    user,
+  };
+}
+
+export function getStoredAuthSession(): AuthSession | null {
+  const rawValue = window.localStorage.getItem(AUTH_SESSION_KEY);
+
+  if (!rawValue) {
     return null;
   }
 
   try {
-    const parsedSession: unknown = JSON.parse(storedSession);
-
-    if (!isAuthSession(parsedSession)) {
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-
-      return null;
-    }
-
-    return parsedSession;
+    return parseAuthSession(JSON.parse(rawValue));
   } catch {
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
-
     return null;
   }
 }
 
-export function writeAuthSession(session: AuthSession) {
-  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+export function getStoredAccessToken() {
+  return getStoredAuthSession()?.accessToken ?? null;
+}
+
+export function saveAuthSession(session: AuthSession) {
+  window.localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
 }
 
 export function clearAuthSession() {
-  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  window.localStorage.removeItem(AUTH_SESSION_KEY);
 }

@@ -39,35 +39,8 @@ export const PERMISSIONS = {
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
-export const NURSE_PERMISSIONS: readonly Permission[] = [
-  PERMISSIONS.DASHBOARD_VIEW,
-
-  PERMISSIONS.PROFILE_VIEW,
-  PERMISSIONS.PROFILE_CHANGE_PASSWORD,
-
-  PERMISSIONS.PATIENTS_LIST,
-  PERMISSIONS.PATIENTS_VIEW,
-  PERMISSIONS.PATIENTS_CREATE,
-
-  PERMISSIONS.SCREENINGS_LIST,
-  PERMISSIONS.SCREENINGS_VIEW,
-  PERMISSIONS.SCREENINGS_CREATE,
-
-  PERMISSIONS.MONITORING_LIST,
-  PERMISSIONS.MONITORING_VIEW,
-  PERMISSIONS.MONITORING_CREATE,
-
-  PERMISSIONS.HISTORY_VIEW_OWN,
-
-  PERMISSIONS.REPORTS_VIEW,
-  PERMISSIONS.REPORTS_PRINT,
-  PERMISSIONS.REPORTS_EXPORT,
-];
-
-export const ALL_PERMISSIONS = Object.values(PERMISSIONS) as Permission[];
-
-const permissionValues = new Set<string>(ALL_PERMISSIONS);
+export const ALL_PERMISSIONS = Object.values(PERMISSIONS);
 
 export function isPermission(value: unknown): value is Permission {
-  return typeof value === 'string' && permissionValues.has(value);
+  return typeof value === 'string' && ALL_PERMISSIONS.includes(value as Permission);
 }

@@ -9,19 +9,21 @@ import type {
 } from '@/features/auth/types/auth.types';
 
 export interface AuthContextValue {
-  session: AuthSession | null;
   user: AuthUser | null;
-  isAuthenticated: boolean;
-  isInitializing: boolean;
-  isRefreshingUser: boolean;
+  session: AuthSession | null;
+  loading: boolean;
   isLoggingOut: boolean;
   authNotice: string | null;
-  lastSyncedAt: string | null;
+
+  loginNurse: (payload: NurseLoginPayload) => Promise<AuthUser>;
+  loginAdmin: (payload: AdminLoginPayload) => Promise<AuthUser>;
+
   loginAsNurse: (payload: NurseLoginPayload) => Promise<AuthUser>;
   loginAsAdmin: (payload: AdminLoginPayload) => Promise<AuthUser>;
-  changePassword: (payload: ChangePasswordPayload) => Promise<void>;
-  refreshUser: () => Promise<AuthUser | null>;
+
   logout: () => Promise<void>;
+  changePassword: (payload: ChangePasswordPayload) => Promise<string>;
+  refreshUser: () => Promise<AuthUser | null>;
   clearAuthNotice: () => void;
 }
 

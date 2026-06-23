@@ -1,19 +1,21 @@
 import type { Permission } from '@/features/auth/constants/permissions';
 
-export type AuthRole = 'nurse' | 'admin';
+export type Role = 'nurse' | 'admin';
+
+export type AuthRole = Role;
 
 export interface AuthUser {
   id: number;
   name: string;
   nim: string | null;
   email: string | null;
-  role: AuthRole;
+  role: Role;
   permissions: Permission[];
 }
 
 export interface AuthSession {
   accessToken: string;
-  tokenType: 'Bearer';
+  tokenType: string;
   user: AuthUser;
 }
 
