@@ -15,7 +15,7 @@ import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
 import { Badge, Card } from '@/components/ui/surface';
-import { getPatientDetail } from '@/features/patients/api/patient.api';
+import { deletePatient, getPatientDetail } from '@/features/patients/api/patient.api';
 import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
 import {
   formatDate,
@@ -27,6 +27,10 @@ import type {
   PatientListRouteState,
 } from '@/features/patients/types/patient-route-state.types';
 import type { Patient } from '@/features/patients/types/patient.types';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { DeleteOutlineOutlined, EditOutlined } from '@mui/icons-material';
+import { hasPermission } from '@/features/auth/lib/authorization';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
 
 interface PatientInfoItemProps {
   icon: ReactNode;
@@ -91,15 +95,20 @@ export function PatientDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
+  const { user } = useAuth();
 
   const routeState = parsePatientDetailRouteState(location.state);
   const patientId = parsePatientId(params.patientId);
+  const canUpdatePatient = hasPermission(user, PERMISSIONS.PATIENTS_UPDATE);
+  const canDeletePatient = hasPermission(user, PERMISSIONS.PATIENTS_DELETE);
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [flashMessage, setFlashMessage] = useState<string | null>(routeState.flashMessage ?? null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -164,6 +173,51 @@ export function PatientDetailPage() {
 
   function handleDismissFlashMessage() {
     setFlashMessage(null);
+  }
+
+  function handleEditPatient() {
+    if (!patientId) {
+      return;
+    }
+
+    void navigate(`/patients/${patientId}/edit`);
+  }
+
+  async function performDeletePatient() {
+    if (!patientId || !patient) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Hapus data pasien ${patient.name}? Tindakan ini tidak dapat dibatalkan.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteErrorMessage(null);
+
+    try {
+      await deletePatient(patientId);
+
+      void navigate(APP_PATHS.PATIENTS, {
+        replace: true,
+        state: {
+          shouldRefreshPatients: true,
+          flashMessage: 'Data pasien berhasil dihapus.',
+        },
+      });
+    } catch (error: unknown) {
+      setDeleteErrorMessage(getErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function handleDeletePatient() {
+    void performDeletePatient();
   }
 
   function handleRefresh() {
@@ -279,6 +333,15 @@ export function PatientDetailPage() {
         </div>
       ) : null}
 
+      {deleteErrorMessage ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {deleteErrorMessage}
+        </div>
+      ) : null}
+
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-brand-600">Detail Pasien</p>
@@ -292,13 +355,38 @@ export function PatientDetailPage() {
           </p>
         </div>
 
-        <Button
-          variant="secondary"
-          leadingIcon={<ArrowBackOutlinedIcon aria-hidden="true" fontSize="small" />}
-          onClick={handleBack}
-        >
-          Kembali
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {canUpdatePatient ? (
+            <Button
+              type="button"
+              variant="secondary"
+              leadingIcon={<EditOutlined aria-hidden="true" fontSize="small" />}
+              onClick={handleEditPatient}
+            >
+              Edit Pasien
+            </Button>
+          ) : null}
+
+          {canDeletePatient ? (
+            <Button
+              type="button"
+              variant="secondary"
+              isLoading={isDeleting}
+              leadingIcon={<DeleteOutlineOutlined aria-hidden="true" fontSize="small" />}
+              onClick={handleDeletePatient}
+            >
+              Hapus Pasien
+            </Button>
+          ) : null}
+
+          <Button
+            variant="secondary"
+            leadingIcon={<ArrowBackOutlinedIcon aria-hidden="true" fontSize="small" />}
+            onClick={handleBack}
+          >
+            Kembali
+          </Button>
+        </div>
       </section>
 
       <Card>

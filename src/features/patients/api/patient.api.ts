@@ -44,3 +44,18 @@ export async function createPatient(payload: CreatePatientPayload): Promise<Crea
 
   return mapCreatePatientResponse(response.data);
 }
+
+export async function deletePatient(patientId: number): Promise<string> {
+  const response = await axiosInstance.delete<unknown>(PATIENT_ENDPOINTS.DELETE(patientId));
+
+  if (
+    typeof response.data === 'object' &&
+    response.data !== null &&
+    'message' in response.data &&
+    typeof response.data.message === 'string'
+  ) {
+    return response.data.message;
+  }
+
+  return 'Data pasien berhasil dihapus.';
+}

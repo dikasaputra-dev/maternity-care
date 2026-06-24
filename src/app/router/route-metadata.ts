@@ -10,6 +10,7 @@ export const APP_PATHS = {
   PATIENTS: '/patients',
   PATIENT_CREATE: '/patients/create',
   PATIENT_DETAIL: '/patients/:patientId',
+  PATIENT_EDIT: '/patients/:patientId/edit',
 
   SCREENINGS: '/screenings',
   HISTORY: '/history',
@@ -96,6 +97,14 @@ export const ROUTE_METADATA = [
     title: 'Detail Pasien',
     access: 'permission',
     permission: PERMISSIONS.PATIENTS_VIEW,
+    end: true,
+  },
+  {
+    id: 'patient-edit',
+    path: APP_PATHS.PATIENT_EDIT,
+    title: 'Edit Pasien',
+    access: 'permission',
+    permission: PERMISSIONS.PATIENTS_UPDATE,
     end: true,
   },
   {
