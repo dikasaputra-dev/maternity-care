@@ -4,6 +4,7 @@ import {
   mapCreatePatientResponse,
   mapPatientDetailResponse,
   mapPatientListResponse,
+  mapUpdatePatientResponse,
 } from '@/features/patients/mapper/patient.mapper';
 import type {
   CreatePatientPayload,
@@ -11,6 +12,7 @@ import type {
   Patient,
   PatientListQuery,
   PatientListResult,
+  UpdatePatientPayload,
 } from '@/features/patients/types/patient.types';
 
 export async function getPatients(query: PatientListQuery = {}): Promise<PatientListResult> {
@@ -43,6 +45,24 @@ export async function createPatient(payload: CreatePatientPayload): Promise<Crea
   });
 
   return mapCreatePatientResponse(response.data);
+}
+
+export async function updatePatient(
+  patientId: number,
+  payload: UpdatePatientPayload,
+): Promise<CreatePatientResult> {
+  const phoneNumber =
+    payload.phone_number === undefined ? undefined : (payload.phone_number?.trim() ?? null);
+
+  const response = await axiosInstance.patch<unknown>(PATIENT_ENDPOINTS.UPDATE(patientId), {
+    name: payload.name?.trim(),
+    date_of_birth: payload.date_of_birth,
+    phone_number: phoneNumber,
+    address: payload.address?.trim(),
+    location: payload.location,
+  });
+
+  return mapUpdatePatientResponse(response.data);
 }
 
 export async function deletePatient(patientId: number): Promise<string> {

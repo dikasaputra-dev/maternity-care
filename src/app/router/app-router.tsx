@@ -17,6 +17,7 @@ import { PatientDetailPage } from '@/pages/patient-detail-page';
 import { PatientsPage } from '@/pages/patients-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
+import { PatientEditPage } from '@/pages/patient-edit-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -67,6 +68,14 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.PATIENTS_VIEW}>
                 <PatientDetailPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.PATIENT_EDIT,
+            element: (
+              <RequirePermission permission={PERMISSIONS.PATIENTS_UPDATE}>
+                <PatientEditPage />
               </RequirePermission>
             ),
           },

@@ -164,3 +164,14 @@ export function mapCreatePatientResponse(response: unknown): CreatePatientResult
     patient: mapPatient(response.data),
   };
 }
+
+export function mapUpdatePatientResponse(response: unknown): CreatePatientResult {
+  if (!isRecord(response)) {
+    throw new ApiError('Format response update pasien tidak valid.');
+  }
+
+  return {
+    message: readMessage(response, 'Data pasien berhasil diperbarui.'),
+    patient: mapPatient(response.data),
+  };
+}

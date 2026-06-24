@@ -58,6 +58,14 @@ export interface CreatePatientPayload {
   location: PatientLocation;
 }
 
+export interface UpdatePatientPayload {
+  name?: string;
+  date_of_birth?: string;
+  phone_number?: string | null;
+  address?: string;
+  location?: PatientLocation;
+}
+
 export interface CreatePatientResult {
   message: string;
   patient: Patient;

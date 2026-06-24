@@ -53,7 +53,20 @@ export interface CreatePatientRequestDto {
   location: PatientLocation;
 }
 
+export interface UpdatePatientRequestDto {
+  name?: string;
+  date_of_birth?: string;
+  phone_number?: string | null;
+  address?: string;
+  location?: PatientLocation;
+}
+
 export interface CreatePatientResponseDto {
+  message: string;
+  data: PatientDto;
+}
+
+export interface UpdatePatientResponseDto {
   message: string;
   data: PatientDto;
 }
