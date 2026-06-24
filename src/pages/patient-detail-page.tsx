@@ -31,6 +31,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import { DeleteOutlineOutlined, EditOutlined } from '@mui/icons-material';
 import { hasPermission } from '@/features/auth/lib/authorization';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
+import { LatestPatientScreeningCard } from '@/features/screenings/components/latest-patient-screening-card';
 
 interface PatientInfoItemProps {
   icon: ReactNode;
@@ -452,6 +453,8 @@ export function PatientDetailPage() {
           />
         </div>
       </Card>
+
+      <LatestPatientScreeningCard patientId={patient.id} />
 
       <Card>
         <h3 className="text-base font-semibold text-slate-950">Status integrasi klinis</h3>
