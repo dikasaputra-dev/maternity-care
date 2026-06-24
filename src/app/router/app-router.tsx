@@ -18,6 +18,7 @@ import { PatientsPage } from '@/pages/patients-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
 import { PatientEditPage } from '@/pages/patient-edit-page';
+import { PatientScreeningCreatePage } from '@/pages/patient-screening-create-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -90,6 +91,14 @@ export const appRouter = createBrowserRouter([
                   actionPermission={PERMISSIONS.SCREENINGS_CREATE}
                   actionDescription="User memiliki izin untuk membuat skrining baru."
                 />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.PATIENT_SCREENING_CREATE,
+            element: (
+              <RequirePermission permission={PERMISSIONS.SCREENINGS_CREATE}>
+                <PatientScreeningCreatePage />
               </RequirePermission>
             ),
           },

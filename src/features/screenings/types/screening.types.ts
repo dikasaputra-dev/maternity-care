@@ -56,3 +56,23 @@ export interface Screening {
   created_at: string;
   updated_at: string;
 }
+
+export interface CreateScreeningPayload {
+  patient_id: number;
+  risk_status: ScreeningRiskStatus;
+  gestational_age_weeks?: number | null;
+  gravida?: number | null;
+  para?: number | null;
+  abortus?: number | null;
+  systolic_bp?: number | null;
+  diastolic_bp?: number | null;
+  estimated_fetal_weight_grams?: number | null;
+  medical_history?: Partial<ScreeningMedicalHistory>;
+  danger_signs?: Partial<ScreeningDangerSigns>;
+  notes?: string | null;
+}
+
+export interface CreateScreeningResult {
+  message: string;
+  screening: Screening;
+}

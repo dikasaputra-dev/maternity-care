@@ -5,6 +5,7 @@ import {
   DEFAULT_MEDICAL_HISTORY,
 } from '@/features/screenings/constants/screening-options';
 import type {
+  CreateScreeningResult,
   Screening,
   ScreeningCreator,
   ScreeningDangerSigns,
@@ -50,6 +51,12 @@ function readString(value: unknown, field: string) {
   }
 
   return value;
+}
+
+function readMessage(response: Record<string, unknown>, fallback: string) {
+  return typeof response.message === 'string' && response.message.trim()
+    ? response.message
+    : fallback;
 }
 
 function readNullableString(value: unknown) {
@@ -173,4 +180,15 @@ export function mapScreeningSingleResponse(response: unknown): Screening {
   }
 
   return mapScreening(response.data);
+}
+
+export function mapCreateScreeningResponse(response: unknown): CreateScreeningResult {
+  if (!isRecord(response)) {
+    throw new ApiError('Format response tambah skrining tidak valid.');
+  }
+
+  return {
+    message: readMessage(response, 'Data skrining berhasil ditambahkan.'),
+    screening: mapScreening(response.data),
+  };
 }

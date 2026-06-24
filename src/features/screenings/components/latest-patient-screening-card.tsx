@@ -19,6 +19,8 @@ import {
   SCREENING_RISK_STATUS_LABELS,
 } from '@/features/screenings/constants/screening-options';
 import type { Screening, ScreeningRiskStatus } from '@/features/screenings/types/screening.types';
+import { useNavigate } from 'react-router';
+import { AddOutlined } from '@mui/icons-material';
 
 interface LatestPatientScreeningCardProps {
   patientId: number;
@@ -82,8 +84,10 @@ function getActiveDangerSignLabels(screening: Screening) {
 
 export function LatestPatientScreeningCard({ patientId }: LatestPatientScreeningCardProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const canViewScreening = hasPermission(user, PERMISSIONS.SCREENINGS_VIEW);
+  const canCreateScreening = hasPermission(user, PERMISSIONS.SCREENINGS_CREATE);
 
   const [screening, setScreening] = useState<Screening | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,6 +141,10 @@ export function LatestPatientScreeningCard({ patientId }: LatestPatientScreening
     };
   }, [canViewScreening, patientId, reloadKey]);
 
+  function handleCreateScreening() {
+    void navigate(`/patients/${patientId}/screenings/create`);
+  }
+
   function handleRefresh() {
     setReloadKey((current) => current + 1);
   }
@@ -166,6 +174,16 @@ export function LatestPatientScreeningCard({ patientId }: LatestPatientScreening
 
             <p className="mt-2 text-sm leading-6 text-slate-500">Belum ada data skrining.</p>
           </div>
+
+          {canCreateScreening ? (
+            <Button
+              type="button"
+              leadingIcon={<AddOutlined aria-hidden="true" fontSize="small" />}
+              onClick={handleCreateScreening}
+            >
+              Tambah Skrining
+            </Button>
+          ) : null}
         </div>
       </Card>
     );
@@ -223,8 +241,20 @@ export function LatestPatientScreeningCard({ patientId }: LatestPatientScreening
             {screening.creator ? ` oleh ${screening.creator.name}` : ''}
           </p>
         </div>
-
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
         <RiskStatusBadge riskStatus={screening.risk_status} />
+
+        {canCreateScreening ? (
+          <Button
+            type="button"
+            variant="secondary"
+            leadingIcon={<AddOutlined aria-hidden="true" fontSize="small" />}
+            onClick={handleCreateScreening}
+          >
+            Tambah Skrining
+          </Button>
+        ) : null}
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-4">
