@@ -6,6 +6,8 @@ import type {
 export interface PatientCreateFormValues {
   name: string;
   dateOfBirth: string;
+  phoneNumber: string;
+  address: string;
   location: PatientLocation | '';
 }
 
@@ -21,6 +23,8 @@ const PATIENT_LOCATIONS: readonly PatientLocation[] = [
 export const INITIAL_PATIENT_CREATE_FORM_VALUES: PatientCreateFormValues = {
   name: '',
   dateOfBirth: '',
+  phoneNumber: '',
+  address: '',
   location: '',
 };
 
@@ -37,10 +41,16 @@ function isFutureDate(value: string) {
   return date.getTime() > today.getTime();
 }
 
+function isValidPhoneNumber(value: string) {
+  return /^[0-9+()\-\s]{8,20}$/.test(value);
+}
+
 export function validatePatientCreateForm(form: PatientCreateFormValues): PatientCreateFieldErrors {
   const errors: PatientCreateFieldErrors = {};
 
   const name = form.name.trim();
+  const phoneNumber = form.phoneNumber.trim();
+  const address = form.address.trim();
 
   if (!name) {
     errors.name = 'Nama pasien wajib diisi.';
@@ -56,10 +66,20 @@ export function validatePatientCreateForm(form: PatientCreateFormValues): Patien
     errors.dateOfBirth = 'Tanggal lahir tidak boleh melebihi hari ini.';
   }
 
+  if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+    errors.phoneNumber = 'Nomor telepon hanya boleh berisi angka, spasi, +, -, dan tanda kurung.';
+  }
+
+  if (!address) {
+    errors.address = 'Alamat tempat tinggal pasien wajib diisi.';
+  } else if (address.length < 5) {
+    errors.address = 'Alamat tempat tinggal pasien terlalu pendek.';
+  }
+
   if (!form.location) {
-    errors.location = 'Lokasi pasien wajib dipilih.';
+    errors.location = 'Lokasi pelayanan wajib dipilih.';
   } else if (!isPatientLocation(form.location)) {
-    errors.location = 'Lokasi pasien tidak valid.';
+    errors.location = 'Lokasi pelayanan tidak valid.';
   }
 
   return errors;
@@ -71,12 +91,16 @@ export function hasPatientCreateErrors(errors: PatientCreateFieldErrors) {
 
 export function mapPatientCreateFormToPayload(form: PatientCreateFormValues): CreatePatientPayload {
   if (!isPatientLocation(form.location)) {
-    throw new Error('Lokasi pasien tidak valid.');
+    throw new Error('Lokasi pelayanan tidak valid.');
   }
+
+  const phoneNumber = form.phoneNumber.trim();
 
   return {
     name: form.name.trim(),
     date_of_birth: form.dateOfBirth,
+    phone_number: phoneNumber || null,
+    address: form.address.trim(),
     location: form.location,
   };
 }

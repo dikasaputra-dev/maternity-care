@@ -19,6 +19,7 @@ import {
   type PatientCreateFormValues,
 } from '@/features/patients/lib/patient-create-validation';
 import { getPatientDetailPath } from '@/features/patients/lib/patient-format';
+import type { PatientDetailRouteState } from '@/features/patients/types/patient-route-state.types';
 import type { PatientLocation } from '@/features/patients/types/patient.types';
 
 function getErrorMessage(error: unknown) {
@@ -46,6 +47,14 @@ function mapLaravelFieldErrors(error: ApiError): PatientCreateFieldErrors {
     errors.dateOfBirth = validationErrors.date_of_birth[0];
   }
 
+  if (validationErrors.phone_number?.[0]) {
+    errors.phoneNumber = validationErrors.phone_number[0];
+  }
+
+  if (validationErrors.address?.[0]) {
+    errors.address = validationErrors.address[0];
+  }
+
   if (validationErrors.location?.[0]) {
     errors.location = validationErrors.location[0];
   }
@@ -61,7 +70,6 @@ export function PatientCreatePage() {
   const [fieldErrors, setFieldErrors] = useState<PatientCreateFieldErrors>({});
 
   const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleBack() {
@@ -83,7 +91,6 @@ export function PatientCreatePage() {
     }));
 
     setFormError(null);
-    setSuccessMessage(null);
   }
 
   function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
@@ -98,6 +105,14 @@ export function PatientCreatePage() {
     updateField('location', event.target.value as PatientLocation | '');
   }
 
+  function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
+    updateField('phoneNumber', event.target.value);
+  }
+
+  function handleAddressChange(event: ChangeEvent<HTMLInputElement>) {
+    updateField('address', event.target.value);
+  }
+
   async function submitPatient() {
     const validationErrors = validatePatientCreateForm(form);
 
@@ -110,15 +125,18 @@ export function PatientCreatePage() {
 
     setIsSubmitting(true);
     setFormError(null);
-    setSuccessMessage(null);
 
     try {
       const result = await createPatient(mapPatientCreateFormToPayload(form));
 
-      setSuccessMessage(result.message || 'Data pasien berhasil disimpan.');
+      const state: PatientDetailRouteState = {
+        fromCreate: true,
+        flashMessage: result.message || 'Data pasien berhasil disimpan.',
+      };
 
       void navigate(getPatientDetailPath(result.patient.id), {
         replace: true,
+        state,
       });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 422) {
@@ -177,15 +195,6 @@ export function PatientCreatePage() {
             </div>
           ) : null}
 
-          {successMessage ? (
-            <div
-              role="status"
-              className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-            >
-              {successMessage}
-            </div>
-          ) : null}
-
           <div className="grid gap-5 md:grid-cols-2">
             <Input
               label="Nama pasien"
@@ -205,9 +214,27 @@ export function PatientCreatePage() {
               disabled={isSubmitting}
             />
 
+            <Input
+              label="Nomor telepon"
+              value={form.phoneNumber}
+              onChange={handlePhoneNumberChange}
+              placeholder="Opsional, contoh: 081234567890"
+              error={fieldErrors.phoneNumber}
+              disabled={isSubmitting}
+            />
+
+            <Input
+              label="Alamat tempat tinggal"
+              value={form.address}
+              onChange={handleAddressChange}
+              placeholder="Contoh: Jl. Melati No. 12, Bandung"
+              error={fieldErrors.address}
+              disabled={isSubmitting}
+            />
+
             <div className="md:col-span-2">
               <label htmlFor="patient-location" className="text-sm font-semibold text-slate-700">
-                Lokasi pasien
+                Lokasi pelayanan
               </label>
 
               <select
@@ -217,7 +244,7 @@ export function PatientCreatePage() {
                 disabled={isSubmitting}
                 className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
               >
-                <option value="">Pilih lokasi pasien</option>
+                <option value="">Pilih lokasi pelayanan</option>
 
                 {PATIENT_LOCATION_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>

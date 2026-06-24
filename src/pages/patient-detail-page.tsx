@@ -5,9 +5,11 @@ import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import UpdateOutlinedIcon from '@mui/icons-material/UpdateOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
 import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
@@ -20,6 +22,10 @@ import {
   formatDateTime,
   getPatientCreatorLabel,
 } from '@/features/patients/lib/patient-format';
+import type {
+  PatientDetailRouteState,
+  PatientListRouteState,
+} from '@/features/patients/types/patient-route-state.types';
 import type { Patient } from '@/features/patients/types/patient.types';
 
 interface PatientInfoItemProps {
@@ -38,7 +44,7 @@ function PatientInfoItem({ icon, label, value }: PatientInfoItemProps) {
       <div className="min-w-0">
         <p className="text-sm font-medium text-slate-500">{label}</p>
 
-        <div className="mt-1 break-words text-sm font-semibold leading-6 text-slate-900">
+        <div className="mt-1 wrap-break-word text-sm font-semibold leading-6 text-slate-900">
           {value}
         </div>
       </div>
@@ -68,16 +74,32 @@ function parsePatientId(value: string | undefined) {
   return Number.isNaN(parsedValue) ? null : parsedValue;
 }
 
+function parsePatientDetailRouteState(value: unknown): PatientDetailRouteState {
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+
+  const state = value as Record<string, unknown>;
+
+  return {
+    fromCreate: state.fromCreate === true,
+    flashMessage: typeof state.flashMessage === 'string' ? state.flashMessage : undefined,
+  };
+}
+
 export function PatientDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams();
 
+  const routeState = parsePatientDetailRouteState(location.state);
   const patientId = parsePatientId(params.patientId);
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [flashMessage, setFlashMessage] = useState<string | null>(routeState.flashMessage ?? null);
 
   useEffect(() => {
     let isActive = true;
@@ -130,7 +152,18 @@ export function PatientDetailPage() {
   }, [patientId]);
 
   function handleBack() {
-    void navigate(APP_PATHS.PATIENTS);
+    const state: PatientListRouteState = {
+      shouldRefreshPatients: routeState.fromCreate,
+      flashMessage: routeState.fromCreate ? 'Daftar pasien telah diperbarui.' : undefined,
+    };
+
+    void navigate(APP_PATHS.PATIENTS, {
+      state,
+    });
+  }
+
+  function handleDismissFlashMessage() {
+    setFlashMessage(null);
   }
 
   function handleRefresh() {
@@ -227,6 +260,25 @@ export function PatientDetailPage() {
 
   return (
     <div className="space-y-6">
+      {flashMessage ? (
+        <div
+          role="status"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p>{flashMessage}</p>
+
+            <button
+              type="button"
+              onClick={handleDismissFlashMessage}
+              className="text-left text-sm font-semibold text-emerald-800 hover:text-emerald-900"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-brand-600">Detail Pasien</p>
@@ -276,8 +328,20 @@ export function PatientDetailPage() {
           />
 
           <PatientInfoItem
+            icon={<PhoneOutlinedIcon aria-hidden="true" fontSize="small" />}
+            label="Nomor Telepon"
+            value={patient.phone_number ?? '-'}
+          />
+
+          <PatientInfoItem
+            icon={<HomeOutlinedIcon aria-hidden="true" fontSize="small" />}
+            label="Alamat Tempat Tinggal"
+            value={patient.address}
+          />
+
+          <PatientInfoItem
             icon={<LocationOnOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Lokasi"
+            label="Lokasi Pelayanan"
             value={getPatientLocationLabel(patient.location)}
           />
 

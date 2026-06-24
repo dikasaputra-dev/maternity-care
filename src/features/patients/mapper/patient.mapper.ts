@@ -83,6 +83,8 @@ export function mapPatient(value: unknown): Patient {
     medical_record_number: readString(value.medical_record_number, 'medical_record_number'),
     name: readString(value.name, 'name'),
     date_of_birth: readString(value.date_of_birth, 'date_of_birth'),
+    phone_number: readNullableString(value.phone_number),
+    address: readString(value.address, 'address'),
     location: value.location,
     created_by: readNumber(value.created_by, 'created_by'),
     creator: mapPatientCreator(value.creator),

@@ -32,3 +32,7 @@ export function getPatientCreatorLabel(patient: Patient) {
 export function getPatientDetailPath(patientId: number) {
   return `/patients/${patientId}`;
 }
+
+export function getPatientListPath() {
+  return '/patients';
+}

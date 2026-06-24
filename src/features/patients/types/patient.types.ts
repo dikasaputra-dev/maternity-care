@@ -14,6 +14,8 @@ export interface Patient {
   medical_record_number: string;
   name: string;
   date_of_birth: string;
+  phone_number: string | null;
+  address: string;
   location: PatientLocation;
   created_by: number;
   creator?: PatientCreator;
@@ -51,6 +53,8 @@ export interface PatientListQuery {
 export interface CreatePatientPayload {
   name: string;
   date_of_birth: string;
+  phone_number?: string | null;
+  address: string;
   location: PatientLocation;
 }
 

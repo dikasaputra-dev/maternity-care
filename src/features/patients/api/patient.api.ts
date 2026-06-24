@@ -32,9 +32,13 @@ export async function getPatientDetail(patientId: number): Promise<Patient> {
 }
 
 export async function createPatient(payload: CreatePatientPayload): Promise<CreatePatientResult> {
+  const phoneNumber = payload.phone_number?.trim() ?? null;
+
   const response = await axiosInstance.post<unknown>(PATIENT_ENDPOINTS.CREATE, {
     name: payload.name.trim(),
     date_of_birth: payload.date_of_birth,
+    phone_number: phoneNumber,
+    address: payload.address.trim(),
     location: payload.location,
   });
 

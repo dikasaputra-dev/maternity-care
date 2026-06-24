@@ -10,6 +10,8 @@ export interface PatientDto {
   medical_record_number: string;
   name: string;
   date_of_birth: string;
+  phone_number: string | null;
+  address: string;
   location: PatientLocation;
   created_by: number;
   creator?: PatientCreatorDto;
@@ -46,6 +48,8 @@ export interface PatientDetailResponseDto {
 export interface CreatePatientRequestDto {
   name: string;
   date_of_birth: string;
+  phone_number?: string | null;
+  address: string;
   location: PatientLocation;
 }
 

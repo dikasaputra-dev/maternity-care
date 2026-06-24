@@ -3,7 +3,7 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
@@ -20,6 +20,7 @@ import {
   getPatientCreatorLabel,
   getPatientDetailPath,
 } from '@/features/patients/lib/patient-format';
+import type { PatientListRouteState } from '@/features/patients/types/patient-route-state.types';
 import type { PatientListResult } from '@/features/patients/types/patient.types';
 
 const PATIENTS_PER_PAGE = 10;
@@ -36,19 +37,39 @@ function getErrorMessage(error: unknown) {
   return 'Gagal memuat data pasien.';
 }
 
+function parsePatientListRouteState(value: unknown): PatientListRouteState {
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+
+  const state = value as Record<string, unknown>;
+
+  return {
+    shouldRefreshPatients: state.shouldRefreshPatients === true,
+    flashMessage: typeof state.flashMessage === 'string' ? state.flashMessage : undefined,
+  };
+}
+
 export function PatientsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [searchInput, setSearchInput] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
   const [patientResult, setPatientResult] = useState<PatientListResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isFlashMessageDismissed, setIsFlashMessageDismissed] = useState(false);
 
   const canCreatePatient = hasPermission(user, PERMISSIONS.PATIENTS_CREATE);
   const canViewPatient = hasPermission(user, PERMISSIONS.PATIENTS_VIEW);
+
+  const routeState = parsePatientListRouteState(location.state);
+
+  const flashMessage = isFlashMessageDismissed ? null : (routeState.flashMessage ?? null);
 
   const patients = patientResult?.patients ?? [];
   const meta = patientResult?.meta;
@@ -63,7 +84,7 @@ export function PatientsPage() {
   useEffect(() => {
     let isActive = true;
 
-    async function loadPatients() {
+    async function loadPatientsSafely() {
       setIsLoading(true);
       setErrorMessage(null);
 
@@ -93,12 +114,12 @@ export function PatientsPage() {
       }
     }
 
-    void loadPatients();
+    void loadPatientsSafely();
 
     return () => {
       isActive = false;
     };
-  }, [appliedSearch, page]);
+  }, [appliedSearch, page, reloadKey]);
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,11 +132,11 @@ export function PatientsPage() {
     setSearchInput('');
     setAppliedSearch('');
     setPage(1);
+    setReloadKey((current) => current + 1);
   }
 
   function handleRefresh() {
-    setPage(1);
-    setAppliedSearch(searchInput.trim());
+    setReloadKey((current) => current + 1);
   }
 
   function handleCreatePatient() {
@@ -126,8 +147,36 @@ export function PatientsPage() {
     void navigate(getPatientDetailPath(patientId));
   }
 
+  function handleDismissFlashMessage() {
+    setIsFlashMessageDismissed(true);
+
+    void navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }
+
   return (
     <div className="space-y-6">
+      {flashMessage ? (
+        <div
+          role="status"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p>{flashMessage}</p>
+
+            <button
+              type="button"
+              onClick={handleDismissFlashMessage}
+              className="text-left text-sm font-semibold text-emerald-800 hover:text-emerald-900"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-brand-600">Data Pasien</p>
