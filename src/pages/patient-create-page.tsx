@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/form-controls';
 import { Card } from '@/components/ui/surface';
 import { createPatient } from '@/features/patients/api/patient.api';
-import { PATIENT_LOCATION_OPTIONS } from '@/features/patients/constants/patient-options';
+import {
+  PATIENT_EDUCATION_OPTIONS,
+  PATIENT_LOCATION_OPTIONS,
+  PATIENT_RELIGION_OPTIONS,
+} from '@/features/patients/constants/patient-options';
 import {
   hasPatientCreateErrors,
   INITIAL_PATIENT_CREATE_FORM_VALUES,
@@ -20,7 +24,11 @@ import {
 } from '@/features/patients/lib/patient-create-validation';
 import { getPatientDetailPath } from '@/features/patients/lib/patient-format';
 import type { PatientDetailRouteState } from '@/features/patients/types/patient-route-state.types';
-import type { PatientLocation } from '@/features/patients/types/patient.types';
+import type {
+  PatientEducation,
+  PatientLocation,
+  PatientReligion,
+} from '@/features/patients/types/patient.types';
 
 function getErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -57,6 +65,22 @@ function mapLaravelFieldErrors(error: ApiError): PatientCreateFieldErrors {
 
   if (validationErrors.location?.[0]) {
     errors.location = validationErrors.location[0];
+  }
+
+  if (validationErrors.religion?.[0]) {
+    errors.religion = validationErrors.religion[0];
+  }
+
+  if (validationErrors.education?.[0]) {
+    errors.education = validationErrors.education[0];
+  }
+
+  if (validationErrors.occupation?.[0]) {
+    errors.occupation = validationErrors.occupation[0];
+  }
+
+  if (validationErrors.ethnicity?.[0]) {
+    errors.ethnicity = validationErrors.ethnicity[0];
   }
 
   return errors;
@@ -111,6 +135,22 @@ export function PatientCreatePage() {
 
   function handleAddressChange(event: ChangeEvent<HTMLInputElement>) {
     updateField('address', event.target.value);
+  }
+
+  function handleReligionChange(event: ChangeEvent<HTMLSelectElement>) {
+    updateField('religion', event.target.value as PatientReligion | '');
+  }
+
+  function handleEducationChange(event: ChangeEvent<HTMLSelectElement>) {
+    updateField('education', event.target.value as PatientEducation | '');
+  }
+
+  function handleOccupationChange(event: ChangeEvent<HTMLInputElement>) {
+    updateField('occupation', event.target.value);
+  }
+
+  function handleEthnicityChange(event: ChangeEvent<HTMLInputElement>) {
+    updateField('ethnicity', event.target.value);
   }
 
   async function submitPatient() {
@@ -211,6 +251,76 @@ export function PatientCreatePage() {
               value={form.dateOfBirth}
               onChange={handleDateOfBirthChange}
               error={fieldErrors.dateOfBirth}
+              disabled={isSubmitting}
+            />
+
+            <div>
+              <label htmlFor="patient-religion" className="text-sm font-semibold text-slate-700">
+                Agama
+              </label>
+
+              <select
+                id="patient-religion"
+                value={form.religion}
+                onChange={handleReligionChange}
+                disabled={isSubmitting}
+                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">Pilih agama</option>
+
+                {PATIENT_RELIGION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {fieldErrors.religion ? (
+                <p className="mt-2 text-sm text-red-600">{fieldErrors.religion}</p>
+              ) : null}
+            </div>
+
+            <div>
+              <label htmlFor="patient-education" className="text-sm font-semibold text-slate-700">
+                Pendidikan
+              </label>
+
+              <select
+                id="patient-education"
+                value={form.education}
+                onChange={handleEducationChange}
+                disabled={isSubmitting}
+                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="">Pilih pendidikan</option>
+
+                {PATIENT_EDUCATION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              {fieldErrors.education ? (
+                <p className="mt-2 text-sm text-red-600">{fieldErrors.education}</p>
+              ) : null}
+            </div>
+
+            <Input
+              label="Pekerjaan"
+              value={form.occupation}
+              onChange={handleOccupationChange}
+              placeholder="Contoh: Ibu Rumah Tangga"
+              error={fieldErrors.occupation}
+              disabled={isSubmitting}
+            />
+
+            <Input
+              label="Ras/Suku"
+              value={form.ethnicity}
+              onChange={handleEthnicityChange}
+              placeholder="Contoh: Sunda"
+              error={fieldErrors.ethnicity}
               disabled={isSubmitting}
             />
 
