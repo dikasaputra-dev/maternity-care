@@ -21,6 +21,7 @@ import { PatientEditPage } from '@/pages/patient-edit-page';
 import { InitialScreeningCreatePage } from '@/pages/initial-screening-create-page';
 import { InitialScreeningsPage } from '@/pages/initial-screenings-page';
 import { InitialScreeningDetailPage } from '@/pages/initial-screening-detail-page';
+import { LaborMonitoringCreatePage } from '@/pages/labor-monitoring-create-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -115,6 +116,14 @@ export const appRouter = createBrowserRouter([
                   description="Riwayat klinis akan mengikuti data skrining dari backend."
                   requiredPermission={PERMISSIONS.HISTORY_VIEW_OWN}
                 />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.LABOR_MONITORING_CREATE,
+            element: (
+              <RequirePermission permission={PERMISSIONS.MONITORING_CREATE}>
+                <LaborMonitoringCreatePage />
               </RequirePermission>
             ),
           },
