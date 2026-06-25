@@ -791,7 +791,7 @@ export function InitialScreeningCreatePage() {
             </div>
 
             <div>
-              <h3 className="text-base font-semibold text-slate-950">Komorbiditas</h3>
+              <h3 className="text-base font-semibold text-slate-950">Penyakit Penyerta</h3>
 
               <div className="mt-4 space-y-3">
                 {COMORBIDITY_KEYS.map((key) => (
@@ -817,7 +817,7 @@ export function InitialScreeningCreatePage() {
 
                 {form.comorbidities.other ? (
                   <Input
-                    label="Keterangan komorbiditas lainnya"
+                    label="Keterangan penyakit penyerta lainnya"
                     value={form.comorbidities.other_text ?? ''}
                     onChange={handleComorbidityOtherTextChange}
                     error={fieldErrors.comorbiditiesOtherText}

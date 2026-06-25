@@ -244,11 +244,11 @@ export function validateInitialScreeningCreateForm(
 
   if (hasComorbidityConflict(form.comorbidities)) {
     errors.comorbidities =
-      'Jika memilih tidak ada komorbiditas, penyakit lain tidak boleh dipilih.';
+      'Jika memilih tidak ada penyakit penyerta, penyakit lain tidak boleh dipilih.';
   }
 
   if (form.comorbidities.other && !form.comorbidities.other_text?.trim()) {
-    errors.comorbiditiesOtherText = 'Keterangan komorbiditas lainnya wajib diisi.';
+    errors.comorbiditiesOtherText = 'Keterangan penyakit penyerta lainnya wajib diisi.';
   }
 
   if (form.notes.trim().length > 2000) {

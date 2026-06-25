@@ -15,7 +15,8 @@ import type {
   InitialScreeningListResult,
 } from '@/features/initial-screenings/types/initial-screening.types';
 import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
-import { formatDateTime, getPatientDetailPath } from '@/features/patients/lib/patient-format';
+import { formatDateTime } from '@/features/patients/lib/patient-format';
+import { getInitialScreeningDetailPath } from '@/features/initial-screenings/lib/initial-screening-path';
 
 const DEFAULT_PER_PAGE = 10;
 
@@ -147,7 +148,7 @@ export function InitialScreeningsPage() {
   }
 
   function handleOpenDetail(screening: InitialScreening) {
-    void navigate(getPatientDetailPath(screening.patient_id));
+    void navigate(getInitialScreeningDetailPath(screening.id));
   }
 
   const initialScreenings = result?.initialScreenings ?? [];

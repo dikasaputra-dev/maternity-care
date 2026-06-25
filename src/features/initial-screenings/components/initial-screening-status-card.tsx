@@ -448,10 +448,10 @@ export function InitialScreeningStatusCard({
         </div>
 
         <div>
-          <p className="text-sm font-semibold text-slate-800">Komorbiditas</p>
+          <p className="text-sm font-semibold text-slate-800">Penyakit Penyerta</p>
 
           <div className="mt-3">
-            <BadgeList labels={comorbidityLabels} emptyMessage="Tidak ada komorbiditas." />
+            <BadgeList labels={comorbidityLabels} emptyMessage="Tidak ada penyakit penyerta." />
           </div>
         </div>
 

@@ -411,12 +411,12 @@ function InitialScreeningDetailContent({
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
-            <p className="text-sm font-semibold text-slate-900">Komorbiditas</p>
+            <p className="text-sm font-semibold text-slate-900">Penyakit Penyerta</p>
 
             <div className="mt-3">
               <ScreeningLabelList
                 labels={comorbidityLabels}
-                emptyMessage="Tidak ada komorbiditas."
+                emptyMessage="Tidak ada penyekit penyerta."
               />
             </div>
           </div>
