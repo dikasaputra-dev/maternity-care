@@ -3,8 +3,9 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutlined';
 import MonitorHeartOutlinedIcon from '@mui/icons-material/MonitorHeartOutlined';
+import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,25 @@ import type {
   PreviousDeliveryHistory,
   PreviousPregnancyHistory,
 } from '@/features/initial-screenings/types/initial-screening.types';
+import { getPatientLaborMonitorings } from '@/features/labor-monitorings/api/labor-monitoring.api';
+import {
+  AMNIOTIC_FLUID_COLOR_LABELS,
+  CONTRACTION_INTENSITY_LABELS,
+  FETAL_HEAD_DESCENT_LABELS,
+  FETAL_MOVEMENT_LABELS,
+  LABOR_MONITORING_RISK_STATUS_LABELS,
+  MEMBRANE_STATUS_LABELS,
+  URINE_ACETONE_LABELS,
+  URINE_PROTEIN_LABELS,
+} from '@/features/labor-monitorings/constants/labor-monitoring-options';
+import { getLaborMonitoringErrorMessage } from '@/features/labor-monitorings/lib/labor-monitoring-error';
+import type {
+  LaborMonitoring,
+  LaborMonitoringCollectionResult,
+  LaborMonitoringRiskStatus,
+} from '@/features/labor-monitorings/types/labor-monitoring.types';
 import { formatDateTime } from '@/features/patients/lib/patient-format';
+import { getLaborMonitoringCreatePath } from '@/features/labor-monitorings/lib/labor-monitoring-path';
 
 type ClinicalFeatureTabId =
   | 'initial-screening'
@@ -57,6 +76,8 @@ interface FeatureTableShellProps {
   action?: ReactNode;
   children: ReactNode;
 }
+
+const DEFAULT_PER_PAGE = 10;
 
 const CLINICAL_FEATURE_TABS: ClinicalFeatureTab[] = [
   {
@@ -156,6 +177,30 @@ function RiskBadge({ riskStatus }: { riskStatus: InitialScreeningRiskStatus }) {
   return (
     <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
       {INITIAL_SCREENING_RISK_STATUS_LABELS[riskStatus]}
+    </span>
+  );
+}
+
+function MonitoringRiskBadge({ riskStatus }: { riskStatus: LaborMonitoringRiskStatus }) {
+  if (riskStatus === 'high') {
+    return (
+      <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700">
+        {LABOR_MONITORING_RISK_STATUS_LABELS[riskStatus]}
+      </span>
+    );
+  }
+
+  if (riskStatus === 'medium') {
+    return (
+      <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+        {LABOR_MONITORING_RISK_STATUS_LABELS[riskStatus]}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+      {LABOR_MONITORING_RISK_STATUS_LABELS[riskStatus]}
     </span>
   );
 }
@@ -411,12 +456,12 @@ function InitialScreeningDetailContent({
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
-            <p className="text-sm font-semibold text-slate-900">Penyakit Penyerta</p>
+            <p className="text-sm font-semibold text-slate-900">Komorbiditas</p>
 
             <div className="mt-3">
               <ScreeningLabelList
                 labels={comorbidityLabels}
-                emptyMessage="Tidak ada penyekit penyerta."
+                emptyMessage="Tidak ada komorbiditas."
               />
             </div>
           </div>
@@ -457,44 +502,276 @@ function InitialScreeningDetailContent({
   );
 }
 
-function LaborMonitoringTable({ hasInitialScreening }: { hasInitialScreening: boolean }) {
+function getMembraneLabel(monitoring: LaborMonitoring) {
+  if (monitoring.membrane_status === 'intact') {
+    return MEMBRANE_STATUS_LABELS.intact;
+  }
+
+  const fluidColorLabel = monitoring.amniotic_fluid_color
+    ? AMNIOTIC_FLUID_COLOR_LABELS[monitoring.amniotic_fluid_color]
+    : '-';
+
+  return `${MEMBRANE_STATUS_LABELS.ruptured} · ${fluidColorLabel}`;
+}
+
+function LaborMonitoringTable({
+  hasInitialScreening,
+  patientId,
+}: {
+  patientId: number;
+  hasInitialScreening: boolean;
+}) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const canCreateMonitoring = hasPermission(user, PERMISSIONS.MONITORING_CREATE);
+
+  const [result, setResult] = useState<LaborMonitoringCollectionResult | null>(null);
+  const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(hasInitialScreening);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const laborMonitorings = result?.laborMonitorings ?? [];
+  const meta = result?.meta ?? null;
+
+  useEffect(() => {
+    if (!hasInitialScreening) {
+      return;
+    }
+
+    let isActive = true;
+
+    getPatientLaborMonitorings(patientId, {
+      page,
+      perPage: DEFAULT_PER_PAGE,
+    })
+      .then((response) => {
+        if (!isActive) {
+          return;
+        }
+
+        setResult(response);
+        setErrorMessage(null);
+      })
+      .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        setResult(null);
+        setErrorMessage(getLaborMonitoringErrorMessage(error));
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [hasInitialScreening, page, patientId, reloadKey]);
+
+  function handleRefresh() {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setReloadKey((currentKey) => currentKey + 1);
+  }
+
+  function handlePreviousPage() {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setPage((currentPage) => currentPage - 1);
+  }
+
+  function handleNextPage() {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setPage((currentPage) => currentPage + 1);
+  }
+
+  function handleCreateMonitoring() {
+    void navigate(getLaborMonitoringCreatePath(patientId));
+  }
+
   if (!hasInitialScreening) {
     return (
-      <EmptyFeatureState
-        title="Pemantauan Persalinan belum aktif"
-        description="Pemantauan Persalinan baru aktif setelah Skrining Awal pasien selesai dibuat."
-      />
+      <FeatureTableShell
+        title="Pemantauan Persalinan"
+        description="Pemantauan Persalinan baru aktif setelah Skrining Awal selesai dibuat."
+      >
+        <EmptyFeatureState
+          title="Pemantauan Persalinan belum aktif"
+          description="Isi Skrining Awal terlebih dahulu agar menu Pemantauan Persalinan dapat digunakan."
+        />
+      </FeatureTableShell>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-100">
-      <table className="min-w-full divide-y divide-slate-100 text-left">
-        <thead className="bg-slate-50">
-          <tr className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <th className="px-4 py-3">Waktu</th>
-            <th className="px-4 py-3">Keadaan Ibu</th>
-            <th className="px-4 py-3">DJJ</th>
-            <th className="px-4 py-3">Kontraksi</th>
-            <th className="px-4 py-3">Ketuban</th>
-            <th className="px-4 py-3">Catatan</th>
-          </tr>
-        </thead>
+    <FeatureTableShell
+      title="Pemantauan Persalinan"
+      description="Catatan berkala kondisi ibu, janin, kontraksi, ketuban, urine, dan perkembangan persalinan."
+      action={
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            leadingIcon={<RefreshOutlinedIcon aria-hidden="true" fontSize="small" />}
+            onClick={handleRefresh}
+          >
+            Refresh
+          </Button>
 
-        <tbody className="bg-white">
-          <tr>
-            <td colSpan={6} className="px-4 py-14 text-center text-sm text-slate-500">
-              <p className="font-semibold text-slate-800">Belum ada pemantauan</p>
+          {canCreateMonitoring ? (
+            <Button
+              type="button"
+              leadingIcon={<AddOutlinedIcon aria-hidden="true" fontSize="small" />}
+              onClick={handleCreateMonitoring}
+            >
+              Tambah Pemantauan
+            </Button>
+          ) : null}
+        </div>
+      }
+    >
+      {errorMessage ? (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {errorMessage}
+        </div>
+      ) : null}
 
-              <p className="mt-2">
-                Tambahkan catatan pemantauan pertama untuk pasien ini setelah API Pemantauan
-                Persalinan tersedia.
-              </p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      {isLoading ? (
+        <p className="text-sm text-slate-500">Memuat data Pemantauan Persalinan...</p>
+      ) : laborMonitorings.length === 0 ? (
+        <EmptyFeatureState
+          title="Belum ada Pemantauan Persalinan"
+          description="Data pemantauan akan tampil setelah nurse menambahkan catatan pemantauan persalinan. Form tambah akan dibuat pada Phase 19C."
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-slate-100">
+          <table className="min-w-full divide-y divide-slate-100 text-left">
+            <thead className="bg-slate-50">
+              <tr className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th className="px-4 py-3">Waktu</th>
+                <th className="px-4 py-3">Risiko</th>
+                <th className="px-4 py-3">Tanda Vital</th>
+                <th className="px-4 py-3">Janin</th>
+                <th className="px-4 py-3">Kontraksi</th>
+                <th className="px-4 py-3">Pembukaan</th>
+                <th className="px-4 py-3">Ketuban</th>
+                <th className="px-4 py-3">Urine</th>
+                <th className="px-4 py-3">Rekomendasi</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {laborMonitorings.map((monitoring) => (
+                <tr key={monitoring.id} className="align-top text-sm">
+                  <td className="whitespace-nowrap px-4 py-4 font-medium text-slate-900">
+                    {formatDateTime(monitoring.monitored_at)}
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4">
+                    <MonitoringRiskBadge riskStatus={monitoring.risk_status} />
+                  </td>
+
+                  <td className="min-w-48 px-4 py-4 text-slate-600">
+                    <p>
+                      TD {monitoring.systolic_bp}/{monitoring.diastolic_bp} mmHg
+                    </p>
+
+                    <p className="mt-1">Nadi {monitoring.pulse_rate} x/menit</p>
+
+                    <p className="mt-1">RR {monitoring.respiratory_rate} x/menit</p>
+
+                    <p className="mt-1">
+                      Suhu {monitoring.temperature_c} °C · SpO₂ {monitoring.oxygen_saturation}%
+                    </p>
+                  </td>
+
+                  <td className="min-w-44 px-4 py-4 text-slate-600">
+                    <p>DJJ {monitoring.fetal_heart_rate} x/menit</p>
+
+                    <p className="mt-1">Gerak {FETAL_MOVEMENT_LABELS[monitoring.fetal_movement]}</p>
+                  </td>
+
+                  <td className="min-w-48 px-4 py-4 text-slate-600">
+                    <p>{monitoring.contraction_frequency_per_10_minutes}x / 10 menit</p>
+
+                    <p className="mt-1">Durasi {monitoring.contraction_duration_seconds} detik</p>
+
+                    <p className="mt-1">
+                      {CONTRACTION_INTENSITY_LABELS[monitoring.contraction_intensity]}
+                    </p>
+                  </td>
+
+                  <td className="min-w-44 px-4 py-4 text-slate-600">
+                    <p>{monitoring.cervical_dilation_cm} cm</p>
+
+                    <p className="mt-1">
+                      {FETAL_HEAD_DESCENT_LABELS[monitoring.fetal_head_descent]}
+                    </p>
+                  </td>
+
+                  <td className="min-w-44 px-4 py-4 text-slate-600">
+                    <p>{getMembraneLabel(monitoring)}</p>
+
+                    {monitoring.membrane_rupture_at ? (
+                      <p className="mt-1 text-xs text-slate-500">
+                        Pecah: {formatDateTime(monitoring.membrane_rupture_at)}
+                      </p>
+                    ) : null}
+                  </td>
+
+                  <td className="min-w-44 px-4 py-4 text-slate-600">
+                    <p>{monitoring.urine_volume_ml} ml</p>
+
+                    <p className="mt-1">Protein {URINE_PROTEIN_LABELS[monitoring.urine_protein]}</p>
+
+                    <p className="mt-1">Aseton {URINE_ACETONE_LABELS[monitoring.urine_acetone]}</p>
+                  </td>
+
+                  <td className="min-w-80 px-4 py-4 text-slate-600">{monitoring.recommendation}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {meta ? (
+        <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Menampilkan {laborMonitorings.length} dari {meta.total} data pemantauan.
+          </p>
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={page <= 1 || isLoading}
+              onClick={handlePreviousPage}
+            >
+              Sebelumnya
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!meta.last_page || page >= meta.last_page || isLoading}
+              onClick={handleNextPage}
+            >
+              Berikutnya
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </FeatureTableShell>
   );
 }
 
@@ -540,21 +817,7 @@ export function PatientClinicalFeatureTabs({
 
     if (safeActiveTab === 'labor-monitoring') {
       return (
-        <FeatureTableShell
-          title="Pemantauan Persalinan"
-          description="Catatan berkala kondisi ibu, janin, kontraksi, ketuban, urine, dan perkembangan persalinan."
-          action={
-            <Button
-              type="button"
-              disabled
-              leadingIcon={<AddOutlinedIcon aria-hidden="true" fontSize="small" />}
-            >
-              Tambah Pemantauan
-            </Button>
-          }
-        >
-          <LaborMonitoringTable hasInitialScreening={hasInitialScreening} />
-        </FeatureTableShell>
+        <LaborMonitoringTable patientId={patientId} hasInitialScreening={hasInitialScreening} />
       );
     }
 
