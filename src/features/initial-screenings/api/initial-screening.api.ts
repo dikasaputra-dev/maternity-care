@@ -2,13 +2,30 @@ import { axiosInstance } from '@/api/axios-instance';
 import { INITIAL_SCREENING_ENDPOINTS } from '@/features/initial-screenings/api/initial-screening-endpoints';
 import {
   mapCreateInitialScreeningResponse,
+  mapInitialScreeningListResponse,
   mapInitialScreeningSingleResponse,
 } from '@/features/initial-screenings/mapper/initial-screening.mapper';
 import type {
   CreateInitialScreeningPayload,
   CreateInitialScreeningResult,
   InitialScreening,
+  InitialScreeningListQuery,
+  InitialScreeningListResult,
 } from '@/features/initial-screenings/types/initial-screening.types';
+
+export async function getInitialScreenings(
+  query: InitialScreeningListQuery = {},
+): Promise<InitialScreeningListResult> {
+  const response = await axiosInstance.get<unknown>(INITIAL_SCREENING_ENDPOINTS.LIST, {
+    params: {
+      search: query.search ?? undefined,
+      page: query.page ?? 1,
+      per_page: query.perPage ?? 10,
+    },
+  });
+
+  return mapInitialScreeningListResponse(response.data);
+}
 
 export async function getPatientInitialScreening(patientId: number): Promise<InitialScreening> {
   const response = await axiosInstance.get<unknown>(

@@ -1,66 +1,26 @@
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
-import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
-import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
-import UpdateOutlinedIcon from '@mui/icons-material/UpdateOutlined';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 
 import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
-import { Badge, Card } from '@/components/ui/surface';
+import { Card } from '@/components/ui/surface';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/lib/authorization';
+import { getPatientInitialScreening } from '@/features/initial-screenings/api/initial-screening.api';
+import type { InitialScreening } from '@/features/initial-screenings/types/initial-screening.types';
+import { PatientDetailDashboard } from '@/features/patients/components/patient-detail-dashboard';
 import { deletePatient, getPatientDetail } from '@/features/patients/api/patient.api';
-import {
-  getPatientEducationLabel,
-  getPatientLocationLabel,
-  getPatientReligionLabel,
-} from '@/features/patients/constants/patient-options';
-import {
-  formatDate,
-  formatDateTime,
-  getPatientCreatorLabel,
-} from '@/features/patients/lib/patient-format';
 import type {
   PatientDetailRouteState,
   PatientListRouteState,
 } from '@/features/patients/types/patient-route-state.types';
 import type { Patient } from '@/features/patients/types/patient.types';
-import { useAuth } from '@/features/auth/hooks/use-auth';
-import { DeleteOutlineOutlined, EditOutlined } from '@mui/icons-material';
-import { hasPermission } from '@/features/auth/lib/authorization';
-import { PERMISSIONS } from '@/features/auth/constants/permissions';
-import { InitialScreeningStatusCard } from '@/features/initial-screenings/components/initial-screening-status-card';
-import { PatientClinicalWorkflowCard } from '@/features/patients/components/patient-clinical-workflow-card';
-
-interface PatientInfoItemProps {
-  icon: ReactNode;
-  label: string;
-  value: ReactNode;
-}
-
-function PatientInfoItem({ icon, label, value }: PatientInfoItemProps) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
-        {icon}
-      </span>
-
-      <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-
-        <div className="mt-1 wrap-break-word text-sm font-semibold leading-6 text-slate-900">
-          {value}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function getErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -105,17 +65,26 @@ export function PatientDetailPage() {
 
   const routeState = parsePatientDetailRouteState(location.state);
   const patientId = parsePatientId(params.patientId);
+
   const canUpdatePatient = hasPermission(user, PERMISSIONS.PATIENTS_UPDATE);
   const canDeletePatient = hasPermission(user, PERMISSIONS.PATIENTS_DELETE);
-  const [hasInitialScreening, setHasInitialScreening] = useState(false);
 
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [initialScreening, setInitialScreening] = useState<InitialScreening | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [initialScreeningErrorMessage, setInitialScreeningErrorMessage] = useState<string | null>(
+    null,
+  );
+
   const [flashMessage, setFlashMessage] = useState<string | null>(routeState.flashMessage ?? null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const hasInitialScreening = initialScreening !== null;
 
   useEffect(() => {
     let isActive = true;
@@ -125,28 +94,59 @@ export function PatientDetailPage() {
         setIsLoading(false);
         setIsNotFound(true);
         setPatient(null);
+        setInitialScreening(null);
+        setInitialScreeningErrorMessage(null);
 
         return;
       }
 
       setIsLoading(true);
       setErrorMessage(null);
+      setInitialScreeningErrorMessage(null);
       setIsNotFound(false);
+      setPatient(null);
+      setInitialScreening(null);
 
       try {
-        const result = await getPatientDetail(patientId);
+        const patientResult = await getPatientDetail(patientId);
 
         if (!isActive) {
           return;
         }
 
-        setPatient(result);
+        setPatient(patientResult);
+
+        try {
+          const initialScreeningResult = await getPatientInitialScreening(patientResult.id);
+
+          if (!isActive) {
+            return;
+          }
+
+          setInitialScreening(initialScreeningResult);
+          setInitialScreeningErrorMessage(null);
+        } catch (error: unknown) {
+          if (!isActive) {
+            return;
+          }
+
+          setInitialScreening(null);
+
+          if (error instanceof ApiError && error.status === 404) {
+            setInitialScreeningErrorMessage(null);
+            return;
+          }
+
+          setInitialScreeningErrorMessage(getErrorMessage(error));
+        }
       } catch (error: unknown) {
         if (!isActive) {
           return;
         }
 
         setPatient(null);
+        setInitialScreening(null);
+        setInitialScreeningErrorMessage(null);
 
         if (error instanceof ApiError && error.status === 404) {
           setIsNotFound(true);
@@ -165,7 +165,7 @@ export function PatientDetailPage() {
     return () => {
       isActive = false;
     };
-  }, [patientId]);
+  }, [patientId, refreshKey]);
 
   function handleBack() {
     const state: PatientListRouteState = {
@@ -228,31 +228,7 @@ export function PatientDetailPage() {
   }
 
   function handleRefresh() {
-    if (!patientId) {
-      return;
-    }
-
-    setPatient(null);
-    setIsLoading(true);
-    setErrorMessage(null);
-    setIsNotFound(false);
-
-    void getPatientDetail(patientId)
-      .then((result) => {
-        setPatient(result);
-      })
-      .catch((error: unknown) => {
-        setPatient(null);
-
-        if (error instanceof ApiError && error.status === 404) {
-          setIsNotFound(true);
-        } else {
-          setErrorMessage(getErrorMessage(error));
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    setRefreshKey((currentKey) => currentKey + 1);
   }
 
   if (isLoading) {
@@ -349,6 +325,16 @@ export function PatientDetailPage() {
         </div>
       ) : null}
 
+      {initialScreeningErrorMessage ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+        >
+          Detail pasien berhasil dimuat, tetapi data Skrining Awal belum bisa dimuat.{' '}
+          {initialScreeningErrorMessage}
+        </div>
+      ) : null}
+
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-brand-600">Detail Pasien</p>
@@ -358,7 +344,7 @@ export function PatientDetailPage() {
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Informasi pasien ini berasal langsung dari backend.
+            Ringkasan identitas, status Skrining Awal, dan alur klinis pasien.
           </p>
         </div>
 
@@ -367,7 +353,7 @@ export function PatientDetailPage() {
             <Button
               type="button"
               variant="secondary"
-              leadingIcon={<EditOutlined aria-hidden="true" fontSize="small" />}
+              leadingIcon={<EditOutlinedIcon aria-hidden="true" fontSize="small" />}
               onClick={handleEditPatient}
             >
               Edit Pasien
@@ -379,7 +365,7 @@ export function PatientDetailPage() {
               type="button"
               variant="secondary"
               isLoading={isDeleting}
-              leadingIcon={<DeleteOutlineOutlined aria-hidden="true" fontSize="small" />}
+              leadingIcon={<DeleteOutlineOutlinedIcon aria-hidden="true" fontSize="small" />}
               onClick={handleDeletePatient}
             >
               Hapus Pasien
@@ -396,106 +382,11 @@ export function PatientDetailPage() {
         </div>
       </section>
 
-      <Card>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-500">Nomor Rekam Medis</p>
-
-            <p className="mt-1 text-xl font-semibold text-slate-950">
-              {patient.medical_record_number}
-            </p>
-          </div>
-
-          <Badge tone="info">{getPatientLocationLabel(patient.location)}</Badge>
-        </div>
-
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
-          <PatientInfoItem
-            icon={<PersonOutlineIcon aria-hidden="true" fontSize="small" />}
-            label="Nama Pasien"
-            value={patient.name}
-          />
-
-          <PatientInfoItem
-            icon={<CalendarMonthOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Tanggal Lahir"
-            value={formatDate(patient.date_of_birth)}
-          />
-
-          <PatientInfoItem
-            icon={<BadgeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Agama"
-            value={getPatientReligionLabel(patient.religion)}
-          />
-
-          <PatientInfoItem
-            icon={<BadgeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Pendidikan"
-            value={getPatientEducationLabel(patient.education)}
-          />
-
-          <PatientInfoItem
-            icon={<BadgeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Pekerjaan"
-            value={patient.occupation}
-          />
-
-          <PatientInfoItem
-            icon={<BadgeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Ras/Suku"
-            value={patient.ethnicity}
-          />
-
-          <PatientInfoItem
-            icon={<PhoneOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Nomor Telepon"
-            value={patient.phone_number ?? '-'}
-          />
-
-          <PatientInfoItem
-            icon={<HomeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Alamat Tempat Tinggal"
-            value={patient.address}
-          />
-
-          <PatientInfoItem
-            icon={<LocationOnOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Lokasi Pelayanan"
-            value={getPatientLocationLabel(patient.location)}
-          />
-
-          <PatientInfoItem
-            icon={<BadgeOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Dibuat Oleh"
-            value={getPatientCreatorLabel(patient)}
-          />
-
-          <PatientInfoItem
-            icon={<CalendarMonthOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Tanggal Dibuat"
-            value={formatDateTime(patient.created_at)}
-          />
-
-          <PatientInfoItem
-            icon={<UpdateOutlinedIcon aria-hidden="true" fontSize="small" />}
-            label="Terakhir Diperbarui"
-            value={formatDateTime(patient.updated_at)}
-          />
-        </div>
-      </Card>
-
-      <InitialScreeningStatusCard patientId={patient.id} onStatusChange={setHasInitialScreening} />
-
-      <PatientClinicalWorkflowCard hasInitialScreening={hasInitialScreening} />
-
-      <Card>
-        <h3 className="text-base font-semibold text-slate-950">Status integrasi klinis</h3>
-
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          Data skrining, status risiko, pemantauan persalinan, dan laporan belum dipanggil pada
-          phase ini. Integrasi tersebut akan dilakukan setelah list dan detail pasien stabil.
-        </p>
-      </Card>
+      <PatientDetailDashboard
+        patient={patient}
+        hasInitialScreening={hasInitialScreening}
+        initialScreening={initialScreening}
+      />
     </div>
   );
 }

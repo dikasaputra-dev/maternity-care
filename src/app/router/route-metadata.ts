@@ -111,6 +111,18 @@ export const ROUTE_METADATA = [
     end: true,
   },
   {
+    id: 'screenings',
+    path: APP_PATHS.SCREENINGS,
+    title: 'Skrining',
+    access: 'permission',
+    permission: PERMISSIONS.SCREENINGS_LIST,
+    end: true,
+    navigation: {
+      label: 'Skrining',
+      order: 30,
+    },
+  },
+  {
     id: 'initial-screening-create',
     path: APP_PATHS.INITIAL_SCREENING_CREATE,
     title: 'Tambah Skrining Awal',

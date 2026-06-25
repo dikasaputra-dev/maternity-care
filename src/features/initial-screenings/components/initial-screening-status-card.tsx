@@ -30,6 +30,7 @@ import { AddOutlined } from '@mui/icons-material';
 interface InitialScreeningStatusCardProps {
   patientId: number;
   onStatusChange?: (hasInitialScreening: boolean) => void;
+  onInitialScreeningChange?: (initialScreening: InitialScreening | null) => void;
 }
 
 function getErrorMessage(error: unknown) {
@@ -171,6 +172,7 @@ function BadgeList({ emptyMessage, labels }: { labels: string[]; emptyMessage: s
 }
 
 export function InitialScreeningStatusCard({
+  onInitialScreeningChange,
   onStatusChange,
   patientId,
 }: InitialScreeningStatusCardProps) {
@@ -206,6 +208,7 @@ export function InitialScreeningStatusCard({
 
         setInitialScreening(result);
         onStatusChange?.(true);
+        onInitialScreeningChange?.(result);
       } catch (error: unknown) {
         if (!isActive) {
           return;
@@ -216,6 +219,7 @@ export function InitialScreeningStatusCard({
         if (error instanceof ApiError && error.status === 404) {
           setIsEmpty(true);
           onStatusChange?.(false);
+          onInitialScreeningChange?.(null);
         } else {
           setErrorMessage(getErrorMessage(error));
         }
@@ -231,7 +235,7 @@ export function InitialScreeningStatusCard({
     return () => {
       isActive = false;
     };
-  }, [onStatusChange, patientId, reloadKey]);
+  }, [onInitialScreeningChange, onStatusChange, patientId, reloadKey]);
 
   function handleRefresh() {
     setReloadKey((current) => current + 1);

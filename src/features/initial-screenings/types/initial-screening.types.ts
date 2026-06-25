@@ -104,3 +104,30 @@ export interface CreateInitialScreeningResult {
   message: string;
   initialScreening: InitialScreening;
 }
+
+export interface InitialScreeningListMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  last_page: number;
+}
+
+export interface InitialScreeningListLinks {
+  first: string | null;
+  last: string | null;
+  previous: string | null;
+  next: string | null;
+}
+
+export interface InitialScreeningListResult {
+  message: string;
+  initialScreenings: InitialScreening[];
+  meta: InitialScreeningListMeta;
+  links: InitialScreeningListLinks;
+}
+
+export interface InitialScreeningListQuery {
+  search?: string;
+  page?: number;
+  perPage?: number;
+}

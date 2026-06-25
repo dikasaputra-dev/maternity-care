@@ -17,6 +17,9 @@ import type {
   InitialScreeningRiskStatus,
   PreviousDeliveryHistory,
   PreviousPregnancyHistory,
+  InitialScreeningListLinks,
+  InitialScreeningListMeta,
+  InitialScreeningListResult,
 } from '@/features/initial-screenings/types/initial-screening.types';
 
 const PATIENT_LOCATIONS: readonly PatientLocation[] = [
@@ -337,5 +340,58 @@ export function mapCreateInitialScreeningResponse(response: unknown): CreateInit
   return {
     message: readMessage(response, 'Skrining Awal berhasil disimpan.'),
     initialScreening: mapInitialScreening(response.data),
+  };
+}
+
+function mapInitialScreeningListMeta(value: unknown): InitialScreeningListMeta {
+  if (!isRecord(value)) {
+    return {
+      current_page: 1,
+      per_page: 10,
+      total: 0,
+      last_page: 1,
+    };
+  }
+
+  return {
+    current_page: typeof value.current_page === 'number' ? value.current_page : 1,
+    per_page: typeof value.per_page === 'number' ? value.per_page : 10,
+    total: typeof value.total === 'number' ? value.total : 0,
+    last_page: typeof value.last_page === 'number' ? value.last_page : 1,
+  };
+}
+
+function mapInitialScreeningListLinks(value: unknown): InitialScreeningListLinks {
+  if (!isRecord(value)) {
+    return {
+      first: null,
+      last: null,
+      previous: null,
+      next: null,
+    };
+  }
+
+  return {
+    first: readNullableString(value.first),
+    last: readNullableString(value.last),
+    previous: readNullableString(value.previous) ?? readNullableString(value.prev),
+    next: readNullableString(value.next),
+  };
+}
+
+export function mapInitialScreeningListResponse(response: unknown): InitialScreeningListResult {
+  if (!isRecord(response)) {
+    throw new ApiError('Format response daftar Skrining Awal tidak valid.');
+  }
+
+  if (!Array.isArray(response.data)) {
+    throw new ApiError('Format data daftar Skrining Awal tidak valid.');
+  }
+
+  return {
+    message: readMessage(response, 'Data Skrining Awal berhasil dimuat.'),
+    initialScreenings: response.data.map(mapInitialScreening),
+    meta: mapInitialScreeningListMeta(response.meta),
+    links: mapInitialScreeningListLinks(response.links),
   };
 }
