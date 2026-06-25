@@ -4,6 +4,26 @@ export type PatientLocation =
   | 'poliklinik-rs'
   | 'ruang-vk-ponek-rs';
 
+export type PatientReligion =
+  | 'islam'
+  | 'kristen-protestan'
+  | 'katolik'
+  | 'hindu'
+  | 'buddha'
+  | 'konghucu'
+  | 'kepercayaan'
+  | 'lainnya';
+
+export type PatientEducation =
+  | 'tidak-sekolah'
+  | 'sd-sederajat'
+  | 'smp-sederajat'
+  | 'sma-sederajat'
+  | 'diploma'
+  | 'sarjana'
+  | 'magister'
+  | 'doktor';
+
 export interface PatientCreator {
   id: number;
   name: string;
@@ -14,6 +34,10 @@ export interface Patient {
   medical_record_number: string;
   name: string;
   date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
   phone_number: string | null;
   address: string;
   location: PatientLocation;
@@ -53,18 +77,16 @@ export interface PatientListQuery {
 export interface CreatePatientPayload {
   name: string;
   date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
   phone_number?: string | null;
   address: string;
   location: PatientLocation;
 }
 
-export interface UpdatePatientPayload {
-  name?: string;
-  date_of_birth?: string;
-  phone_number?: string | null;
-  address?: string;
-  location?: PatientLocation;
-}
+export type UpdatePatientPayload = Partial<CreatePatientPayload>;
 
 export interface CreatePatientResult {
   message: string;

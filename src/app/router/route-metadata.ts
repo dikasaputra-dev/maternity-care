@@ -11,9 +11,7 @@ export const APP_PATHS = {
   PATIENT_CREATE: '/patients/create',
   PATIENT_DETAIL: '/patients/:patientId',
   PATIENT_EDIT: '/patients/:patientId/edit',
-  PATIENT_SCREENING_CREATE: '/patients/:patientId/screenings/create',
 
-  SCREENINGS: '/screenings',
   HISTORY: '/history',
   REPORTS: '/reports',
 
@@ -106,25 +104,6 @@ export const ROUTE_METADATA = [
     title: 'Edit Pasien',
     access: 'permission',
     permission: PERMISSIONS.PATIENTS_UPDATE,
-    end: true,
-  },
-  {
-    id: 'screenings',
-    path: APP_PATHS.SCREENINGS,
-    title: 'Skrining',
-    access: 'permission',
-    permission: PERMISSIONS.SCREENINGS_LIST,
-    navigation: {
-      label: 'Skrining',
-      order: 30,
-    },
-  },
-  {
-    id: 'patient-screening-create',
-    path: APP_PATHS.PATIENT_SCREENING_CREATE,
-    title: 'Tambah Skrining',
-    access: 'permission',
-    permission: PERMISSIONS.SCREENINGS_CREATE,
     end: true,
   },
   {

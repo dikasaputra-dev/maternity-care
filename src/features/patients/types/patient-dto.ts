@@ -1,4 +1,8 @@
-import type { PatientLocation } from '@/features/patients/types/patient.types';
+import type {
+  PatientEducation,
+  PatientLocation,
+  PatientReligion,
+} from '@/features/patients/types/patient.types';
 
 export interface PatientCreatorDto {
   id: number;
@@ -10,6 +14,10 @@ export interface PatientDto {
   medical_record_number: string;
   name: string;
   date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
   phone_number: string | null;
   address: string;
   location: PatientLocation;
@@ -48,25 +56,18 @@ export interface PatientDetailResponseDto {
 export interface CreatePatientRequestDto {
   name: string;
   date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
   phone_number?: string | null;
   address: string;
   location: PatientLocation;
 }
 
-export interface UpdatePatientRequestDto {
-  name?: string;
-  date_of_birth?: string;
-  phone_number?: string | null;
-  address?: string;
-  location?: PatientLocation;
-}
+export type UpdatePatientRequestDto = Partial<CreatePatientRequestDto>;
 
-export interface CreatePatientResponseDto {
-  message: string;
-  data: PatientDto;
-}
-
-export interface UpdatePatientResponseDto {
+export interface PatientMutationResponseDto {
   message: string;
   data: PatientDto;
 }

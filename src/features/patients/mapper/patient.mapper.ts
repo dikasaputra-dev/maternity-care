@@ -3,10 +3,12 @@ import type {
   CreatePatientResult,
   Patient,
   PatientCreator,
+  PatientEducation,
   PatientListLinks,
   PatientListMeta,
   PatientListResult,
   PatientLocation,
+  PatientReligion,
 } from '@/features/patients/types/patient.types';
 
 const PATIENT_LOCATIONS: readonly PatientLocation[] = [
@@ -16,12 +18,42 @@ const PATIENT_LOCATIONS: readonly PatientLocation[] = [
   'ruang-vk-ponek-rs',
 ];
 
+const PATIENT_RELIGIONS: readonly PatientReligion[] = [
+  'islam',
+  'kristen-protestan',
+  'katolik',
+  'hindu',
+  'buddha',
+  'konghucu',
+  'kepercayaan',
+  'lainnya',
+];
+
+const PATIENT_EDUCATIONS: readonly PatientEducation[] = [
+  'tidak-sekolah',
+  'sd-sederajat',
+  'smp-sederajat',
+  'sma-sederajat',
+  'diploma',
+  'sarjana',
+  'magister',
+  'doktor',
+];
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
 function isPatientLocation(value: unknown): value is PatientLocation {
   return typeof value === 'string' && PATIENT_LOCATIONS.includes(value as PatientLocation);
+}
+
+function isPatientReligion(value: unknown): value is PatientReligion {
+  return typeof value === 'string' && PATIENT_RELIGIONS.includes(value as PatientReligion);
+}
+
+function isPatientEducation(value: unknown): value is PatientEducation {
+  return typeof value === 'string' && PATIENT_EDUCATIONS.includes(value as PatientEducation);
 }
 
 function readString(value: unknown, field: string) {
@@ -59,13 +91,16 @@ function mapPatientCreator(value: unknown): PatientCreator | undefined {
     return undefined;
   }
 
-  if (typeof value.id !== 'number' || typeof value.name !== 'string') {
+  const id = value.id;
+  const name = value.name;
+
+  if (typeof id !== 'number' || typeof name !== 'string') {
     return undefined;
   }
 
   return {
-    id: value.id,
-    name: value.name,
+    id,
+    name,
   };
 }
 
@@ -74,8 +109,20 @@ export function mapPatient(value: unknown): Patient {
     throw new ApiError('Format data pasien dari server tidak valid.');
   }
 
-  if (!isPatientLocation(value.location)) {
+  const location = value.location;
+  const religion = value.religion;
+  const education = value.education;
+
+  if (!isPatientLocation(location)) {
     throw new ApiError('Lokasi pasien dari server tidak valid.');
+  }
+
+  if (!isPatientReligion(religion)) {
+    throw new ApiError('Agama pasien dari server tidak valid.');
+  }
+
+  if (!isPatientEducation(education)) {
+    throw new ApiError('Pendidikan pasien dari server tidak valid.');
   }
 
   return {
@@ -83,9 +130,13 @@ export function mapPatient(value: unknown): Patient {
     medical_record_number: readString(value.medical_record_number, 'medical_record_number'),
     name: readString(value.name, 'name'),
     date_of_birth: readString(value.date_of_birth, 'date_of_birth'),
+    religion,
+    education,
+    occupation: readString(value.occupation, 'occupation'),
+    ethnicity: readString(value.ethnicity, 'ethnicity'),
     phone_number: readNullableString(value.phone_number),
     address: readString(value.address, 'address'),
-    location: value.location,
+    location,
     created_by: readNumber(value.created_by, 'created_by'),
     creator: mapPatientCreator(value.creator),
     created_at: readString(value.created_at, 'created_at'),

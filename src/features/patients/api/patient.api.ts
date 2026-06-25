@@ -39,6 +39,10 @@ export async function createPatient(payload: CreatePatientPayload): Promise<Crea
   const response = await axiosInstance.post<unknown>(PATIENT_ENDPOINTS.CREATE, {
     name: payload.name.trim(),
     date_of_birth: payload.date_of_birth,
+    religion: payload.religion,
+    education: payload.education,
+    occupation: payload.occupation.trim(),
+    ethnicity: payload.ethnicity.trim(),
     phone_number: phoneNumber,
     address: payload.address.trim(),
     location: payload.location,
@@ -57,6 +61,10 @@ export async function updatePatient(
   const response = await axiosInstance.patch<unknown>(PATIENT_ENDPOINTS.UPDATE(patientId), {
     name: payload.name?.trim(),
     date_of_birth: payload.date_of_birth,
+    religion: payload.religion,
+    education: payload.education,
+    occupation: payload.occupation?.trim(),
+    ethnicity: payload.ethnicity?.trim(),
     phone_number: phoneNumber,
     address: payload.address?.trim(),
     location: payload.location,
