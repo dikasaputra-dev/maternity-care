@@ -13,8 +13,8 @@ export const APP_PATHS = {
   PATIENT_EDIT: '/patients/:patientId/edit',
 
   SCREENINGS: '/initial-screenings',
-
   INITIAL_SCREENING_CREATE: '/patients/:patientId/initial-screening/create',
+  INITIAL_SCREENING_DETAIL: '/initial-screenings/:initialScreeningId',
 
   HISTORY: '/history',
   REPORTS: '/reports',
@@ -128,6 +128,14 @@ export const ROUTE_METADATA = [
     title: 'Tambah Skrining Awal',
     access: 'permission',
     permission: PERMISSIONS.SCREENINGS_CREATE,
+    end: true,
+  },
+  {
+    id: 'initial-screening-detail',
+    path: APP_PATHS.INITIAL_SCREENING_DETAIL,
+    title: 'Detail Skrining Awal',
+    access: 'permission',
+    permission: PERMISSIONS.SCREENINGS_VIEW,
     end: true,
   },
   {

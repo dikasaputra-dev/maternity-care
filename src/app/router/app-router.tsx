@@ -20,6 +20,7 @@ import { UnauthorizedPage } from '@/pages/unauthorized-page';
 import { PatientEditPage } from '@/pages/patient-edit-page';
 import { InitialScreeningCreatePage } from '@/pages/initial-screening-create-page';
 import { InitialScreeningsPage } from '@/pages/initial-screenings-page';
+import { InitialScreeningDetailPage } from '@/pages/initial-screening-detail-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -94,6 +95,14 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.SCREENINGS_CREATE}>
                 <InitialScreeningCreatePage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.INITIAL_SCREENING_DETAIL,
+            element: (
+              <RequirePermission permission={PERMISSIONS.SCREENINGS_VIEW}>
+                <InitialScreeningDetailPage />
               </RequirePermission>
             ),
           },

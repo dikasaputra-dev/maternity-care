@@ -66,3 +66,13 @@ export async function createPatientInitialScreening(
 
   return mapCreateInitialScreeningResponse(response.data);
 }
+
+export async function getInitialScreeningDetail(
+  initialScreeningId: number,
+): Promise<InitialScreening> {
+  const response = await axiosInstance.get<unknown>(
+    INITIAL_SCREENING_ENDPOINTS.DETAIL(initialScreeningId),
+  );
+
+  return mapInitialScreeningSingleResponse(response.data);
+}
