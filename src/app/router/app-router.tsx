@@ -18,6 +18,7 @@ import { PatientsPage } from '@/pages/patients-page';
 import { ProfilePage } from '@/pages/profile-page';
 import { UnauthorizedPage } from '@/pages/unauthorized-page';
 import { PatientEditPage } from '@/pages/patient-edit-page';
+import { InitialScreeningCreatePage } from '@/pages/initial-screening-create-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -76,6 +77,14 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.PATIENTS_UPDATE}>
                 <PatientEditPage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.INITIAL_SCREENING_CREATE,
+            element: (
+              <RequirePermission permission={PERMISSIONS.SCREENINGS_CREATE}>
+                <InitialScreeningCreatePage />
               </RequirePermission>
             ),
           },

@@ -77,3 +77,30 @@ export interface InitialScreening {
   created_at: string;
   updated_at: string;
 }
+
+export interface CreateInitialScreeningPayload {
+  height_cm: number;
+  general_condition: string;
+  systolic_bp: number;
+  diastolic_bp: number;
+  pulse_rate: number;
+  respiratory_rate: number;
+  temperature_c: number;
+  oxygen_saturation: number;
+  gravida: number;
+  parity: number;
+  abortus: number;
+  living_children: number;
+  gestational_age_weeks: number;
+  has_previous_delivery: boolean;
+  previous_delivery_spacing_years: number | null;
+  previous_pregnancy_history: PreviousPregnancyHistory;
+  comorbidities: InitialScreeningComorbidities;
+  previous_delivery_history: PreviousDeliveryHistory;
+  notes: string | null;
+}
+
+export interface CreateInitialScreeningResult {
+  message: string;
+  initialScreening: InitialScreening;
+}

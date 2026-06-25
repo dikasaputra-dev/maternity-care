@@ -11,6 +11,31 @@ export const INITIAL_SCREENING_RISK_STATUS_LABELS: Record<InitialScreeningRiskSt
   high: 'Risiko Tinggi',
 };
 
+export const PREVIOUS_PREGNANCY_HISTORY_KEYS = [
+  'normal',
+  'hypertension',
+  'eclampsia',
+  'gestational_diabetes',
+  'preeclampsia',
+  'other',
+] as const satisfies readonly Exclude<keyof PreviousPregnancyHistory, 'other_text'>[];
+
+export const COMORBIDITY_KEYS = [
+  'none',
+  'heart_disease',
+  'asthma',
+  'hypertension',
+  'anemia',
+  'bleeding',
+  'other',
+] as const satisfies readonly Exclude<keyof InitialScreeningComorbidities, 'other_text'>[];
+
+export const PREVIOUS_DELIVERY_HISTORY_KEYS = [
+  'spontaneous_vaginal',
+  'assisted_vaginal',
+  'cesarean_section',
+] as const satisfies readonly (keyof PreviousDeliveryHistory)[];
+
 export const PREVIOUS_PREGNANCY_HISTORY_LABELS: Record<
   Exclude<keyof PreviousPregnancyHistory, 'other_text'>,
   string
@@ -53,7 +78,7 @@ export const DEFAULT_PREVIOUS_PREGNANCY_HISTORY: PreviousPregnancyHistory = {
 };
 
 export const DEFAULT_COMORBIDITIES: InitialScreeningComorbidities = {
-  none: false,
+  none: true,
   heart_disease: false,
   asthma: false,
   hypertension: false,

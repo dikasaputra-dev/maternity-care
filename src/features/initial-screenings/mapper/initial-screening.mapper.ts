@@ -10,6 +10,7 @@ import {
   DEFAULT_PREVIOUS_PREGNANCY_HISTORY,
 } from '@/features/initial-screenings/constants/initial-screening-options';
 import type {
+  CreateInitialScreeningResult,
   InitialScreening,
   InitialScreeningComorbidities,
   InitialScreeningPatientSummary,
@@ -107,6 +108,12 @@ function readStringArray(value: unknown) {
   }
 
   return value.filter((item): item is string => typeof item === 'string');
+}
+
+function readMessage(response: Record<string, unknown>, fallback: string) {
+  return typeof response.message === 'string' && response.message.trim()
+    ? response.message
+    : fallback;
 }
 
 function readBooleanWithDefault(value: Record<string, unknown>, key: string, fallback: boolean) {
@@ -320,4 +327,15 @@ export function mapInitialScreeningSingleResponse(response: unknown): InitialScr
   }
 
   return mapInitialScreening(response.data);
+}
+
+export function mapCreateInitialScreeningResponse(response: unknown): CreateInitialScreeningResult {
+  if (!isRecord(response)) {
+    throw new ApiError('Format response tambah Skrining Awal tidak valid.');
+  }
+
+  return {
+    message: readMessage(response, 'Skrining Awal berhasil disimpan.'),
+    initialScreening: mapInitialScreening(response.data),
+  };
 }

@@ -21,6 +21,11 @@ import type {
   PreviousDeliveryHistory,
   PreviousPregnancyHistory,
 } from '@/features/initial-screenings/types/initial-screening.types';
+import { useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/lib/authorization';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
+import { AddOutlined } from '@mui/icons-material';
 
 interface InitialScreeningStatusCardProps {
   patientId: number;
@@ -97,7 +102,7 @@ function getActivePreviousPregnancyHistoryLabels(history: PreviousPregnancyHisto
 }
 
 function getActiveComorbidityLabels(comorbidities: InitialScreeningComorbidities) {
-const labels: string[] = [];
+  const labels: string[] = [];
 
   if (comorbidities.none) {
     labels.push(COMORBIDITY_LABELS.none);
@@ -171,6 +176,15 @@ export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatus
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const canCreateInitialScreening = hasPermission(user, PERMISSIONS.SCREENINGS_CREATE);
+
+  function handleCreateInitialScreening() {
+    void navigate(`/patients/${patientId}/initial-screening/create`);
+  }
+
   useEffect(() => {
     let isActive = true;
 
@@ -228,23 +242,37 @@ export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatus
   if (isEmpty) {
     return (
       <Card>
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
-            <FactCheckOutlinedIcon aria-hidden="true" fontSize="small" />
-          </span>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+              <FactCheckOutlinedIcon aria-hidden="true" fontSize="small" />
+            </span>
 
-          <div>
-            <p className="text-sm font-semibold text-brand-600">Skrining Awal</p>
+            <div>
+              <p className="text-sm font-semibold text-brand-600">Skrining Awal</p>
 
-            <h3 className="mt-1 text-base font-semibold text-slate-950">
-              Skrining Awal belum diisi
-            </h3>
+              <h3 className="mt-1 text-base font-semibold text-slate-950">
+                Skrining Awal belum diisi
+              </h3>
 
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Pasien belum memiliki data Skrining Awal. Pemantauan Persalinan, Tindakan, Luaran
-              Persalinan, dan Luaran Kelahiran Bayi belum aktif sampai Skrining Awal dibuat.
-            </p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                Pasien belum memiliki data Skrining Awal. Pemantauan Persalinan, Tindakan, Luaran
+                Persalinan, dan Luaran Kelahiran Bayi belum aktif sampai Skrining Awal dibuat.
+              </p>
+            </div>
           </div>
+
+          {canCreateInitialScreening ? (
+            <div className="flex shrink-0 justify-end sm:self-center">
+              <Button
+                type="button"
+                leadingIcon={<AddOutlined aria-hidden="true" fontSize="small" />}
+                onClick={handleCreateInitialScreening}
+              >
+                Isi Skrining Awal
+              </Button>
+            </div>
+          ) : null}
         </div>
       </Card>
     );
