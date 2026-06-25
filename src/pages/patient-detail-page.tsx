@@ -36,6 +36,7 @@ import { DeleteOutlineOutlined, EditOutlined } from '@mui/icons-material';
 import { hasPermission } from '@/features/auth/lib/authorization';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { InitialScreeningStatusCard } from '@/features/initial-screenings/components/initial-screening-status-card';
+import { PatientClinicalWorkflowCard } from '@/features/patients/components/patient-clinical-workflow-card';
 
 interface PatientInfoItemProps {
   icon: ReactNode;
@@ -106,6 +107,7 @@ export function PatientDetailPage() {
   const patientId = parsePatientId(params.patientId);
   const canUpdatePatient = hasPermission(user, PERMISSIONS.PATIENTS_UPDATE);
   const canDeletePatient = hasPermission(user, PERMISSIONS.PATIENTS_DELETE);
+  const [hasInitialScreening, setHasInitialScreening] = useState(false);
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -482,7 +484,9 @@ export function PatientDetailPage() {
         </div>
       </Card>
 
-      <InitialScreeningStatusCard patientId={patient.id} />
+      <InitialScreeningStatusCard patientId={patient.id} onStatusChange={setHasInitialScreening} />
+
+      <PatientClinicalWorkflowCard hasInitialScreening={hasInitialScreening} />
 
       <Card>
         <h3 className="text-base font-semibold text-slate-950">Status integrasi klinis</h3>

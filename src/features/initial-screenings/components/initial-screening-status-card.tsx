@@ -29,6 +29,7 @@ import { AddOutlined } from '@mui/icons-material';
 
 interface InitialScreeningStatusCardProps {
   patientId: number;
+  onStatusChange?: (hasInitialScreening: boolean) => void;
 }
 
 function getErrorMessage(error: unknown) {
@@ -169,7 +170,10 @@ function BadgeList({ emptyMessage, labels }: { labels: string[]; emptyMessage: s
   );
 }
 
-export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatusCardProps) {
+export function InitialScreeningStatusCard({
+  onStatusChange,
+  patientId,
+}: InitialScreeningStatusCardProps) {
   const [initialScreening, setInitialScreening] = useState<InitialScreening | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -201,6 +205,7 @@ export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatus
         }
 
         setInitialScreening(result);
+        onStatusChange?.(true);
       } catch (error: unknown) {
         if (!isActive) {
           return;
@@ -210,6 +215,7 @@ export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatus
 
         if (error instanceof ApiError && error.status === 404) {
           setIsEmpty(true);
+          onStatusChange?.(false);
         } else {
           setErrorMessage(getErrorMessage(error));
         }
@@ -225,7 +231,7 @@ export function InitialScreeningStatusCard({ patientId }: InitialScreeningStatus
     return () => {
       isActive = false;
     };
-  }, [patientId, reloadKey]);
+  }, [onStatusChange, patientId, reloadKey]);
 
   function handleRefresh() {
     setReloadKey((current) => current + 1);
