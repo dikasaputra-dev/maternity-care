@@ -26,7 +26,10 @@ import type {
   PreviousDeliveryHistory,
   PreviousPregnancyHistory,
 } from '@/features/initial-screenings/types/initial-screening.types';
-import { getPatientLaborMonitorings } from '@/features/labor-monitorings/api/labor-monitoring.api';
+import {
+  deleteLaborMonitoring,
+  getPatientLaborMonitorings,
+} from '@/features/labor-monitorings/api/labor-monitoring.api';
 import {
   AMNIOTIC_FLUID_COLOR_LABELS,
   CONTRACTION_INTENSITY_LABELS,
@@ -47,8 +50,9 @@ import { formatDateTime } from '@/features/patients/lib/patient-format';
 import {
   getLaborMonitoringCreatePath,
   getLaborMonitoringDetailPath,
+  getLaborMonitoringEditPath,
 } from '@/features/labor-monitorings/lib/labor-monitoring-path';
-import { VisibilityOutlined } from '@mui/icons-material';
+import { DeleteOutlineOutlined, EditOutlined, VisibilityOutlined } from '@mui/icons-material';
 
 type ClinicalFeatureTabId =
   | 'initial-screening'
@@ -530,12 +534,17 @@ function LaborMonitoringTable({
 
   const canCreateMonitoring = hasPermission(user, PERMISSIONS.MONITORING_CREATE);
   const canViewMonitoring = hasPermission(user, PERMISSIONS.MONITORING_VIEW);
+  const canUpdateMonitoring = hasPermission(user, PERMISSIONS.MONITORING_UPDATE);
+  const canDeleteMonitoring = hasPermission(user, PERMISSIONS.MONITORING_DELETE);
+
+  const shouldShowActionColumn = canViewMonitoring || canUpdateMonitoring || canDeleteMonitoring;
 
   const [result, setResult] = useState<LaborMonitoringCollectionResult | null>(null);
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(hasInitialScreening);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const laborMonitorings = result?.laborMonitorings ?? [];
   const meta = result?.meta ?? null;
@@ -604,6 +613,38 @@ function LaborMonitoringTable({
     void navigate(getLaborMonitoringDetailPath(laborMonitoringId));
   }
 
+  function handleEditMonitoring(laborMonitoringId: number) {
+    void navigate(getLaborMonitoringEditPath(laborMonitoringId));
+  }
+
+  function handleDeleteMonitoring(monitoring: LaborMonitoring) {
+    const confirmed = window.confirm(
+      'Hapus data Pemantauan Persalinan ini? Data yang sudah dihapus tidak dapat dikembalikan.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    void deleteSelectedMonitoring(monitoring.id);
+  }
+
+  async function deleteSelectedMonitoring(laborMonitoringId: number) {
+    setDeletingId(laborMonitoringId);
+    setErrorMessage(null);
+
+    try {
+      await deleteLaborMonitoring(laborMonitoringId);
+
+      setIsLoading(true);
+      setReloadKey((currentKey) => currentKey + 1);
+    } catch (error: unknown) {
+      setErrorMessage(getLaborMonitoringErrorMessage(error));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (!hasInitialScreening) {
     return (
       <FeatureTableShell
@@ -659,7 +700,7 @@ function LaborMonitoringTable({
       ) : laborMonitorings.length === 0 ? (
         <EmptyFeatureState
           title="Belum ada Pemantauan Persalinan"
-          description="Data pemantauan akan tampil setelah nurse menambahkan catatan pemantauan persalinan. Form tambah akan dibuat pada Phase 19C."
+          description="Data pemantauan akan tampil setelah nurse menambahkan catatan pemantauan persalinan."
         />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-100">
@@ -675,7 +716,7 @@ function LaborMonitoringTable({
                 <th className="px-4 py-3">Ketuban</th>
                 <th className="px-4 py-3">Urine</th>
                 <th className="px-4 py-3">Rekomendasi</th>
-                {canViewMonitoring ? <th className="px-4 py-3">Aksi</th> : null}
+                {shouldShowActionColumn ? <th className="px-4 py-3">Aksi</th> : null}
               </tr>
             </thead>
 
@@ -747,16 +788,46 @@ function LaborMonitoringTable({
                   </td>
 
                   <td className="min-w-80 px-4 py-4 text-slate-600">{monitoring.recommendation}</td>
-                  {canViewMonitoring ? (
+
+                  {shouldShowActionColumn ? (
                     <td className="whitespace-nowrap px-4 py-4">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        leadingIcon={<VisibilityOutlined aria-hidden="true" fontSize="small" />}
-                        onClick={() => handleOpenMonitoringDetail(monitoring.id)}
-                      >
-                        Detail
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        {canViewMonitoring ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            leadingIcon={<VisibilityOutlined aria-hidden="true" fontSize="small" />}
+                            onClick={() => handleOpenMonitoringDetail(monitoring.id)}
+                          >
+                            Detail
+                          </Button>
+                        ) : null}
+
+                        {canUpdateMonitoring ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            leadingIcon={<EditOutlined aria-hidden="true" fontSize="small" />}
+                            onClick={() => handleEditMonitoring(monitoring.id)}
+                          >
+                            Edit
+                          </Button>
+                        ) : null}
+
+                        {canDeleteMonitoring ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            isLoading={deletingId === monitoring.id}
+                            leadingIcon={
+                              <DeleteOutlineOutlined aria-hidden="true" fontSize="small" />
+                            }
+                            onClick={() => handleDeleteMonitoring(monitoring)}
+                          >
+                            Hapus
+                          </Button>
+                        ) : null}
+                      </div>
                     </td>
                   ) : null}
                 </tr>
