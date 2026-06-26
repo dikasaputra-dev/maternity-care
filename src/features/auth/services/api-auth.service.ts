@@ -16,32 +16,19 @@ import type {
   AuthUser,
   ChangePasswordPayload,
   NurseLoginPayload,
+  Role,
 } from '@/features/auth/types/auth.types';
 
-async function loginAndSyncUser(
-  loginResponse: unknown,
-  expectedRole: 'nurse' | 'admin',
-): Promise<AuthSession> {
-  const loginSession = mapLoginResponse(loginResponse, expectedRole);
-
-  const syncedUser = mapMeResponse(await getMe(loginSession.accessToken));
-
-  return {
-    ...loginSession,
-    user: syncedUser,
-  };
-}
-
 export async function loginNurse(payload: NurseLoginPayload): Promise<AuthSession> {
-  return loginAndSyncUser(await postNurseLogin(payload), 'nurse');
+  return mapLoginResponse(await postNurseLogin(payload), 'nurse');
 }
 
 export async function loginAdmin(payload: AdminLoginPayload): Promise<AuthSession> {
-  return loginAndSyncUser(await postAdminLogin(payload), 'admin');
+  return mapLoginResponse(await postAdminLogin(payload), 'admin');
 }
 
-export async function getAuthenticatedUser(): Promise<AuthUser> {
-  return mapMeResponse(await getMe());
+export async function getAuthenticatedUser(fallbackRole?: Role): Promise<AuthUser> {
+  return mapMeResponse(await getMe(), fallbackRole);
 }
 
 export async function logout(): Promise<string> {
