@@ -85,6 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       saveAuthSession(nextSession);
       setSession(nextSession);
       setLastSyncedAt(new Date().toISOString());
+      setAuthNotice(null);
 
       return syncedUser;
     } finally {
@@ -136,6 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         saveAuthSession(nextSession);
         setSession(nextSession);
         setLastSyncedAt(new Date().toISOString());
+        setAuthNotice(null);
       } catch (error: unknown) {
         clearAuthSession();
 
@@ -163,6 +165,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       clearAuthSession();
       setSession(null);
       setLastSyncedAt(null);
+      setIsLoggingOut(false);
+      setIsRefreshingUser(false);
       setAuthNotice(message);
     });
   }, []);
@@ -196,10 +200,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await logout();
     } catch {
       // Token expired tetap harus membersihkan session lokal.
+      // Tidak perlu menampilkan pesan session expired saat user memang klik logout.
     } finally {
       clearAuthSession();
       setSession(null);
       setLastSyncedAt(null);
+      setAuthNotice(null);
       setIsLoggingOut(false);
     }
   }
