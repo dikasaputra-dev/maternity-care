@@ -1,13 +1,38 @@
+import type { AuthErrorReason } from '@/features/auth/types/auth.types';
+
 const AUTH_UNAUTHORIZED_EVENT = 'maternity-care:unauthorized';
 
-export function emitUnauthorized() {
-  window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+export interface UnauthorizedEventDetail {
+  message: string;
+  reason?: AuthErrorReason;
 }
 
-export function onUnauthorized(callback: () => void) {
-  window.addEventListener(AUTH_UNAUTHORIZED_EVENT, callback);
+const DEFAULT_UNAUTHORIZED_MESSAGE = 'Sesi Anda telah berakhir. Silakan login kembali.';
+
+export function emitUnauthorized(detail?: Partial<UnauthorizedEventDetail>) {
+  window.dispatchEvent(
+    new CustomEvent<UnauthorizedEventDetail>(AUTH_UNAUTHORIZED_EVENT, {
+      detail: {
+        message: detail?.message ?? DEFAULT_UNAUTHORIZED_MESSAGE,
+        reason: detail?.reason,
+      },
+    }),
+  );
+}
+
+export function onUnauthorized(callback: (detail: UnauthorizedEventDetail) => void) {
+  function handleUnauthorized(event: Event) {
+    const customEvent = event as CustomEvent<UnauthorizedEventDetail>;
+
+    callback({
+      message: customEvent.detail?.message ?? DEFAULT_UNAUTHORIZED_MESSAGE,
+      reason: customEvent.detail?.reason,
+    });
+  }
+
+  window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
 
   return () => {
-    window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, callback);
+    window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   };
 }
