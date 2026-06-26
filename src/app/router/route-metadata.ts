@@ -17,6 +17,7 @@ export const APP_PATHS = {
   INITIAL_SCREENING_DETAIL: '/initial-screenings/:initialScreeningId',
 
   LABOR_MONITORING_CREATE: '/patients/:patientId/labor-monitorings/create',
+  LABOR_MONITORING_DETAIL: '/labor-monitorings/:laborMonitoringId',
 
   HISTORY: '/history',
   REPORTS: '/reports',
@@ -146,6 +147,14 @@ export const ROUTE_METADATA = [
     title: 'Tambah Pemantauan Persalinan',
     access: 'permission',
     permission: PERMISSIONS.MONITORING_CREATE,
+    end: true,
+  },
+  {
+    id: 'labor-monitoring-detail',
+    path: APP_PATHS.LABOR_MONITORING_DETAIL,
+    title: 'Detail Pemantauan Persalinan',
+    access: 'permission',
+    permission: PERMISSIONS.MONITORING_VIEW,
     end: true,
   },
   {

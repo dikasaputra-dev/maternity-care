@@ -22,6 +22,7 @@ import { InitialScreeningCreatePage } from '@/pages/initial-screening-create-pag
 import { InitialScreeningsPage } from '@/pages/initial-screenings-page';
 import { InitialScreeningDetailPage } from '@/pages/initial-screening-detail-page';
 import { LaborMonitoringCreatePage } from '@/pages/labor-monitoring-create-page';
+import { LaborMonitoringDetailPage } from '@/pages/labor-monitoring-detail-page';
 
 export const appRouter = createBrowserRouter([
   {
@@ -124,6 +125,14 @@ export const appRouter = createBrowserRouter([
             element: (
               <RequirePermission permission={PERMISSIONS.MONITORING_CREATE}>
                 <LaborMonitoringCreatePage />
+              </RequirePermission>
+            ),
+          },
+          {
+            path: APP_PATHS.LABOR_MONITORING_DETAIL,
+            element: (
+              <RequirePermission permission={PERMISSIONS.MONITORING_VIEW}>
+                <LaborMonitoringDetailPage />
               </RequirePermission>
             ),
           },
