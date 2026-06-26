@@ -4,6 +4,7 @@ import type {
   Patient,
   PatientCreator,
   PatientEducation,
+  PatientListItem,
   PatientListLinks,
   PatientListMeta,
   PatientListResult,
@@ -82,28 +83,56 @@ function readMessage(response: Record<string, unknown>, fallback: string) {
     : fallback;
 }
 
-function mapPatientCreator(value: unknown): PatientCreator | undefined {
+function mapPatientCreator(value: unknown): PatientCreator | null {
   if (value === undefined || value === null) {
-    return undefined;
+    return null;
   }
 
   if (!isRecord(value)) {
-    return undefined;
+    return null;
   }
 
-  const id = value.id;
-  const name = value.name;
-
-  if (typeof id !== 'number' || typeof name !== 'string') {
-    return undefined;
+  if (typeof value.name !== 'string' || !value.name.trim()) {
+    return null;
   }
 
   return {
-    id,
-    name,
+    id: typeof value.id === 'number' ? value.id : undefined,
+    name: value.name,
   };
 }
 
+function readPatientLocation(value: unknown) {
+  if (!isPatientLocation(value)) {
+    throw new ApiError('Lokasi pasien dari server tidak valid.');
+  }
+
+  return value;
+}
+
+/**
+ * Mapper khusus item dari GET /api/patients.
+ * Endpoint list hanya boleh mengisi field table.
+ */
+export function mapPatientListItem(value: unknown): PatientListItem {
+  if (!isRecord(value)) {
+    throw new ApiError('Format item daftar pasien dari server tidak valid.');
+  }
+
+  return {
+    id: readNumber(value.id, 'id'),
+    medical_record_number: readString(value.medical_record_number, 'medical_record_number'),
+    name: readString(value.name, 'name'),
+    date_of_birth: readString(value.date_of_birth, 'date_of_birth'),
+    location: readPatientLocation(value.location),
+    creator: mapPatientCreator(value.creator),
+  };
+}
+
+/**
+ * Mapper detail pasien.
+ * Dipakai untuk GET /api/patients/{id}, create response, dan update response.
+ */
 export function mapPatient(value: unknown): Patient {
   if (!isRecord(value)) {
     throw new ApiError('Format data pasien dari server tidak valid.');
@@ -191,7 +220,7 @@ export function mapPatientListResponse(response: unknown): PatientListResult {
 
   return {
     message: readMessage(response, 'Data pasien berhasil dimuat.'),
-    patients: response.data.map(mapPatient),
+    patients: response.data.map(mapPatientListItem),
     meta: mapPatientListMeta(response.meta),
     links: mapPatientListLinks(response.links),
   };
