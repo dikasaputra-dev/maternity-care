@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsRefreshingUser(true);
 
     try {
-      const syncedUser = await getAuthenticatedUser();
+      const syncedUser = await getAuthenticatedUser(storedSession.user.role);
 
       const nextSession: AuthSession = {
         ...storedSession,
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       try {
-        const syncedUser = await getAuthenticatedUser();
+        const syncedUser = await getAuthenticatedUser(storedSession.user.role);
 
         if (!isActive) {
           return;
