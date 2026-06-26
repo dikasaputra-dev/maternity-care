@@ -1,29 +1,25 @@
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router';
 
 import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/form-controls';
 import { Badge, Card } from '@/components/ui/surface';
 import { getPatientDetail, updatePatient } from '@/features/patients/api/patient.api';
+import { PatientForm } from '@/features/patients/components/patient-form';
 import {
-  PATIENT_EDUCATION_OPTIONS,
-  PATIENT_LOCATION_OPTIONS,
-  PATIENT_RELIGION_OPTIONS,
-} from '@/features/patients/constants/patient-options';
-import {
-  hasPatientEditErrors,
-  mapPatientEditFormToPayload,
-  mapPatientToEditForm,
-  validatePatientEditForm,
-  type PatientEditFieldErrors,
-  type PatientEditFormValues,
-} from '@/features/patients/lib/patient-edit-validation';
+  hasPatientFormErrors,
+  mapLaravelPatientFieldErrors,
+  mapPatientFormToPayload,
+  mapPatientToFormValues,
+  validatePatientForm,
+  type PatientFormFieldErrors,
+  type PatientFormValues,
+} from '@/features/patients/lib/patient-form-validation';
 import { formatDateTime, getPatientDetailPath } from '@/features/patients/lib/patient-format';
-import type { PatientLocation, Patient, PatientReligion, PatientEducation } from '@/features/patients/types/patient.types';
+import type { Patient } from '@/features/patients/types/patient.types';
 
 function getErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
@@ -47,50 +43,6 @@ function parsePatientId(value: string | undefined) {
   return Number.isNaN(parsedValue) ? null : parsedValue;
 }
 
-function mapLaravelFieldErrors(error: ApiError): PatientEditFieldErrors {
-  const errors: PatientEditFieldErrors = {};
-
-  const validationErrors = error.errors ?? error.validationErrors;
-
-  if (validationErrors.name?.[0]) {
-    errors.name = validationErrors.name[0];
-  }
-
-  if (validationErrors.date_of_birth?.[0]) {
-    errors.dateOfBirth = validationErrors.date_of_birth[0];
-  }
-
-  if (validationErrors.phone_number?.[0]) {
-    errors.phoneNumber = validationErrors.phone_number[0];
-  }
-
-  if (validationErrors.address?.[0]) {
-    errors.address = validationErrors.address[0];
-  }
-
-  if (validationErrors.location?.[0]) {
-    errors.location = validationErrors.location[0];
-  }
-
-  if (validationErrors.religion?.[0]) {
-    errors.religion = validationErrors.religion[0];
-  }
-
-  if (validationErrors.education?.[0]) {
-    errors.education = validationErrors.education[0];
-  }
-
-  if (validationErrors.occupation?.[0]) {
-    errors.occupation = validationErrors.occupation[0];
-  }
-
-  if (validationErrors.ethnicity?.[0]) {
-    errors.ethnicity = validationErrors.ethnicity[0];
-  }
-
-  return errors;
-}
-
 export function PatientEditPage() {
   const navigate = useNavigate();
   const params = useParams();
@@ -98,8 +50,8 @@ export function PatientEditPage() {
   const patientId = parsePatientId(params.patientId);
 
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [form, setForm] = useState<PatientEditFormValues | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<PatientEditFieldErrors>({});
+  const [form, setForm] = useState<PatientFormValues | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<PatientFormFieldErrors>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
@@ -129,7 +81,7 @@ export function PatientEditPage() {
         }
 
         setPatient(result);
-        setForm(mapPatientToEditForm(result));
+        setForm(mapPatientToFormValues(result));
       } catch (error: unknown) {
         if (!isActive) {
           return;
@@ -163,9 +115,9 @@ export function PatientEditPage() {
     void navigate(APP_PATHS.PATIENTS);
   }
 
-  function updateField<Key extends keyof PatientEditFormValues>(
+  function updateField<Key extends keyof PatientFormValues>(
     field: Key,
-    value: PatientEditFormValues[Key],
+    value: PatientFormValues[Key],
   ) {
     setForm((currentForm) => {
       if (!currentForm) {
@@ -186,50 +138,14 @@ export function PatientEditPage() {
     setFormError(null);
   }
 
-  function handleNameChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('name', event.target.value);
-  }
-
-  function handleDateOfBirthChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('dateOfBirth', event.target.value);
-  }
-
-  function handlePhoneNumberChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('phoneNumber', event.target.value);
-  }
-
-  function handleAddressChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('address', event.target.value);
-  }
-
-  function handleLocationChange(event: ChangeEvent<HTMLSelectElement>) {
-    updateField('location', event.target.value as PatientLocation | '');
-  }
-
-  function handleReligionChange(event: ChangeEvent<HTMLSelectElement>) {
-    updateField('religion', event.target.value as PatientReligion | '');
-  }
-
-  function handleEducationChange(event: ChangeEvent<HTMLSelectElement>) {
-    updateField('education', event.target.value as PatientEducation | '');
-  }
-
-  function handleOccupationChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('occupation', event.target.value);
-  }
-
-  function handleEthnicityChange(event: ChangeEvent<HTMLInputElement>) {
-    updateField('ethnicity', event.target.value);
-  }
-
   async function submitPatient() {
     if (!patientId || !form) {
       return;
     }
 
-    const validationErrors = validatePatientEditForm(form);
+    const validationErrors = validatePatientForm(form);
 
-    if (hasPatientEditErrors(validationErrors)) {
+    if (hasPatientFormErrors(validationErrors)) {
       setFieldErrors(validationErrors);
       setFormError('Periksa kembali data pasien yang wajib diisi.');
 
@@ -240,7 +156,7 @@ export function PatientEditPage() {
     setFormError(null);
 
     try {
-      const result = await updatePatient(patientId, mapPatientEditFormToPayload(form));
+      const result = await updatePatient(patientId, mapPatientFormToPayload(form));
 
       void navigate(getPatientDetailPath(result.patient.id), {
         replace: true,
@@ -250,7 +166,7 @@ export function PatientEditPage() {
       });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 422) {
-        const backendErrors = mapLaravelFieldErrors(error);
+        const backendErrors = mapLaravelPatientFieldErrors(error);
 
         setFieldErrors(backendErrors);
         setFormError('Periksa kembali data pasien yang wajib diisi.');
@@ -359,164 +275,17 @@ export function PatientEditPage() {
           <Badge tone="neutral">Terakhir diperbarui: {formatDateTime(patient.updated_at)}</Badge>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {formError ? (
-            <div
-              role="alert"
-              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            >
-              {formError}
-            </div>
-          ) : null}
-
-          <div className="grid gap-5 md:grid-cols-2">
-            <Input
-              label="Nama pasien"
-              value={form.name}
-              onChange={handleNameChange}
-              placeholder="Contoh: Rina Nuraini"
-              error={fieldErrors.name}
-              disabled={isSubmitting}
-            />
-
-            <Input
-              type="date"
-              label="Tanggal lahir"
-              value={form.dateOfBirth}
-              onChange={handleDateOfBirthChange}
-              error={fieldErrors.dateOfBirth}
-              disabled={isSubmitting}
-            />
-
-            <div>
-              <label htmlFor="patient-religion" className="text-sm font-semibold text-slate-700">
-                Agama
-              </label>
-
-              <select
-                id="patient-religion"
-                value={form.religion}
-                onChange={handleReligionChange}
-                disabled={isSubmitting}
-                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-              >
-                <option value="">Pilih agama</option>
-
-                {PATIENT_RELIGION_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              {fieldErrors.religion ? (
-                <p className="mt-2 text-sm text-red-600">{fieldErrors.religion}</p>
-              ) : null}
-            </div>
-
-            <div>
-              <label htmlFor="patient-education" className="text-sm font-semibold text-slate-700">
-                Pendidikan
-              </label>
-
-              <select
-                id="patient-education"
-                value={form.education}
-                onChange={handleEducationChange}
-                disabled={isSubmitting}
-                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-              >
-                <option value="">Pilih pendidikan</option>
-
-                {PATIENT_EDUCATION_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              {fieldErrors.education ? (
-                <p className="mt-2 text-sm text-red-600">{fieldErrors.education}</p>
-              ) : null}
-            </div>
-
-            <Input
-              label="Pekerjaan"
-              value={form.occupation}
-              onChange={handleOccupationChange}
-              placeholder="Contoh: Ibu Rumah Tangga"
-              error={fieldErrors.occupation}
-              disabled={isSubmitting}
-            />
-
-            <Input
-              label="Ras/Suku"
-              value={form.ethnicity}
-              onChange={handleEthnicityChange}
-              placeholder="Contoh: Sunda"
-              error={fieldErrors.ethnicity}
-              disabled={isSubmitting}
-            />
-
-            <Input
-              label="Nomor telepon"
-              value={form.phoneNumber}
-              onChange={handlePhoneNumberChange}
-              placeholder="Opsional, contoh: 081234567890"
-              error={fieldErrors.phoneNumber}
-              disabled={isSubmitting}
-            />
-
-            <Input
-              label="Alamat tempat tinggal"
-              value={form.address}
-              onChange={handleAddressChange}
-              placeholder="Contoh: Jl. Sukamaju No. 12, Bandung"
-              error={fieldErrors.address}
-              disabled={isSubmitting}
-            />
-
-            <div className="md:col-span-2">
-              <label htmlFor="patient-location" className="text-sm font-semibold text-slate-700">
-                Lokasi pelayanan
-              </label>
-
-              <select
-                id="patient-location"
-                value={form.location}
-                onChange={handleLocationChange}
-                disabled={isSubmitting}
-                className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-              >
-                <option value="">Pilih lokasi pelayanan</option>
-
-                {PATIENT_LOCATION_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              {fieldErrors.location ? (
-                <p className="mt-2 text-sm text-red-600">{fieldErrors.location}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-            <Button type="button" variant="secondary" disabled={isSubmitting} onClick={handleBack}>
-              Batal
-            </Button>
-
-            <Button
-              type="submit"
-              isLoading={isSubmitting}
-              leadingIcon={<SaveOutlinedIcon aria-hidden="true" fontSize="small" />}
-            >
-              Simpan Perubahan
-            </Button>
-          </div>
-        </form>
+        <PatientForm
+          values={form}
+          errors={fieldErrors}
+          formError={formError}
+          isSubmitting={isSubmitting}
+          submitLabel="Simpan Perubahan"
+          submitIcon={<SaveOutlinedIcon aria-hidden="true" fontSize="small" />}
+          onCancel={handleBack}
+          onChange={updateField}
+          onSubmit={handleSubmit}
+        />
       </Card>
     </div>
   );

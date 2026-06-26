@@ -1,7 +1,6 @@
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -14,7 +13,7 @@ import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/lib/authorization';
 import { getPatients } from '@/features/patients/api/patient.api';
-import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
+import { PatientListTable } from '@/features/patients/components/patient-list-table';
 import { getPatientDetailPath } from '@/features/patients/lib/patient-format';
 import type { PatientListRouteState } from '@/features/patients/types/patient-route-state.types';
 import type { PatientListResult } from '@/features/patients/types/patient.types';
@@ -44,10 +43,6 @@ function parsePatientListRouteState(value: unknown): PatientListRouteState {
     shouldRefreshPatients: state.shouldRefreshPatients === true,
     flashMessage: typeof state.flashMessage === 'string' ? state.flashMessage : undefined,
   };
-}
-
-function getPatientListCreatorLabel(patient: { creator: { name: string } | null }) {
-  return patient.creator?.name.trim() ?? '-';
 }
 
 export function PatientsPage() {
@@ -120,31 +115,6 @@ export function PatientsPage() {
       isActive = false;
     };
   }, [appliedSearch, page, reloadKey]);
-
-  function getPatientAgeLabel(dateOfBirth: string) {
-    const [year, month, day] = dateOfBirth.split('-').map(Number);
-
-    if (!year || !month || !day) {
-      return '-';
-    }
-
-    const today = new Date();
-
-    let age = today.getFullYear() - year;
-
-    const hasHadBirthdayThisYear =
-      today.getMonth() + 1 > month || (today.getMonth() + 1 === month && today.getDate() >= day);
-
-    if (!hasHadBirthdayThisYear) {
-      age -= 1;
-    }
-
-    if (age < 0) {
-      return '-';
-    }
-
-    return `${age} Tahun`;
-  }
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -283,81 +253,13 @@ export function PatientsPage() {
           </div>
         ) : null}
 
-        <div className="mt-5 overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-left">
-            <thead>
-              <tr className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <th className="whitespace-nowrap px-4 py-3">Nomor RM</th>
-                <th className="whitespace-nowrap px-4 py-3">Nama</th>
-                <th className="whitespace-nowrap px-4 py-3">Usia</th>{' '}
-                <th className="whitespace-nowrap px-4 py-3">Lokasi</th>
-                <th className="whitespace-nowrap px-4 py-3">Dibuat Oleh</th>
-                <th className="whitespace-nowrap px-4 py-3 text-right">Aksi</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-100">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">
-                    Memuat data pasien...
-                  </td>
-                </tr>
-              ) : null}
-
-              {!isLoading && !errorMessage && patients.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-500">
-                    Belum ada data pasien.
-                  </td>
-                </tr>
-              ) : null}
-
-              {!isLoading && !errorMessage
-                ? patients.map((patient) => (
-                    <tr key={patient.id} className="align-top">
-                      <td className="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
-                        {patient.medical_record_number}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-4 text-sm font-semibold text-slate-900">
-                        {patient.name}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        {getPatientAgeLabel(patient.date_of_birth)}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        {getPatientLocationLabel(patient.location)}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        {getPatientListCreatorLabel(patient)}{' '}
-                      </td>
-
-                      <td className="whitespace-nowrap px-4 py-4 text-right">
-                        {canViewPatient ? (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            leadingIcon={
-                              <VisibilityOutlinedIcon aria-hidden="true" fontSize="small" />
-                            }
-                            onClick={() => handleOpenDetail(patient.id)}
-                          >
-                            Detail
-                          </Button>
-                        ) : (
-                          <span className="text-sm text-slate-400">Tidak tersedia</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                : null}
-            </tbody>
-          </table>
-        </div>
+        <PatientListTable
+          patients={patients}
+          isLoading={isLoading}
+          errorMessage={errorMessage}
+          canViewPatient={canViewPatient}
+          onOpenDetail={handleOpenDetail}
+        />
 
         <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">

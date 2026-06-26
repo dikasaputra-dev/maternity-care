@@ -1,5 +1,24 @@
 import { createBrowserRouter } from 'react-router';
 
+import {
+  ChangePasswordPage,
+  DashboardPage,
+  InitialScreeningCreatePage,
+  InitialScreeningDetailPage,
+  InitialScreeningsPage,
+  LaborMonitoringCreatePage,
+  LaborMonitoringDetailPage,
+  LaborMonitoringEditPage,
+  LoginPage,
+  ModulePreviewPage,
+  NotFoundPage,
+  PatientCreatePage,
+  PatientDetailPage,
+  PatientEditPage,
+  PatientsPage,
+  ProfilePage,
+  UnauthorizedPage,
+} from '@/app/router/lazy-pages';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { AuthenticatedIndexRoute } from '@/features/auth/components/authenticated-index-route';
 import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
@@ -7,23 +26,6 @@ import { RequireAuth } from '@/features/auth/components/require-auth';
 import { RequirePermission } from '@/features/auth/components/require-permission';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { ProtectedLayout } from '@/layouts/protected-layout';
-import { ChangePasswordPage } from '@/pages/change-password-page';
-import { DashboardPage } from '@/pages/dashboard-page';
-import { LoginPage } from '@/pages/login-page';
-import { ModulePreviewPage } from '@/pages/module-preview-page';
-import { NotFoundPage } from '@/pages/not-found-page';
-import { PatientCreatePage } from '@/pages/patient-create-page';
-import { PatientDetailPage } from '@/pages/patient-detail-page';
-import { PatientsPage } from '@/pages/patients-page';
-import { ProfilePage } from '@/pages/profile-page';
-import { UnauthorizedPage } from '@/pages/unauthorized-page';
-import { PatientEditPage } from '@/pages/patient-edit-page';
-import { InitialScreeningCreatePage } from '@/pages/initial-screening-create-page';
-import { InitialScreeningsPage } from '@/pages/initial-screenings-page';
-import { InitialScreeningDetailPage } from '@/pages/initial-screening-detail-page';
-import { LaborMonitoringCreatePage } from '@/pages/labor-monitoring-create-page';
-import { LaborMonitoringDetailPage } from '@/pages/labor-monitoring-detail-page';
-import { LaborMonitoringEditPage } from '@/pages/labor-monitoring-edit-page';
 
 export const appRouter = createBrowserRouter([
   {
