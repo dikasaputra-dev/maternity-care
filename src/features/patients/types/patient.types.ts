@@ -25,10 +25,28 @@ export type PatientEducation =
   | 'doktor';
 
 export interface PatientCreator {
-  id: number;
+  id?: number;
   name: string;
 }
 
+/**
+ * Contract khusus GET /api/patients.
+ * Data ini hanya untuk list/table pasien.
+ * Jangan dipakai untuk detail pasien.
+ */
+export interface PatientListItem {
+  id: number;
+  medical_record_number: string;
+  name: string;
+  date_of_birth: string;
+  location: PatientLocation;
+  creator: PatientCreator | null;
+}
+
+/**
+ * Contract detail pasien.
+ * Data lengkap hanya boleh berasal dari GET /api/patients/{id}.
+ */
 export interface Patient {
   id: number;
   medical_record_number: string;
@@ -42,7 +60,7 @@ export interface Patient {
   address: string;
   location: PatientLocation;
   created_by: number;
-  creator?: PatientCreator;
+  creator: PatientCreator | null;
   created_at: string;
   updated_at: string;
 }
@@ -63,7 +81,7 @@ export interface PatientListLinks {
 
 export interface PatientListResult {
   message: string;
-  patients: Patient[];
+  patients: PatientListItem[];
   meta: PatientListMeta;
   links: PatientListLinks;
 }
