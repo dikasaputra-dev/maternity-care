@@ -4,15 +4,20 @@ import type { AuthSession, AuthUser, Role } from '@/features/auth/types/auth.typ
 const AUTH_SESSION_KEY = 'maternity-care.auth-session';
 
 /**
- * Storage utama untuk auth sekarang memakai sessionStorage.
- * Ini lebih aman untuk aplikasi klinis karena token hilang saat tab/browser ditutup.
+ * Storage utama auth memakai localStorage agar session bisa dipakai lintas tab.
+ *
+ * Alasan:
+ * - Jika user login di Tab A, lalu membuka Tab B ke / atau /login,
+ *   frontend tetap bisa membaca session dan redirect ke dashboard.
+ * - Validasi keamanan tetap dikontrol backend melalui expiresAt, idle timeout,
+ *   dan single active session.
  */
-const authStorage = window.sessionStorage;
+const authStorage = window.localStorage;
 
 /**
- * Storage lama dibersihkan agar token lama dari localStorage tidak ikut terbaca.
+ * SessionStorage dibersihkan sebagai legacy dari implementasi sebelumnya.
  */
-const legacyAuthStorage = window.localStorage;
+const legacySessionStorage = window.sessionStorage;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -135,12 +140,12 @@ export function saveAuthSession(session: AuthSession) {
   authStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
 
   /**
-   * Pastikan session lama dari localStorage tidak tersisa.
+   * Pastikan session lama dari sessionStorage tidak tersisa.
    */
-  legacyAuthStorage.removeItem(AUTH_SESSION_KEY);
+  legacySessionStorage.removeItem(AUTH_SESSION_KEY);
 }
 
 export function clearAuthSession() {
   authStorage.removeItem(AUTH_SESSION_KEY);
-  legacyAuthStorage.removeItem(AUTH_SESSION_KEY);
+  legacySessionStorage.removeItem(AUTH_SESSION_KEY);
 }
