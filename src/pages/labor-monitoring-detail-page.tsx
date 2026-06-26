@@ -6,7 +6,10 @@ import { useNavigate, useParams } from 'react-router';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/surface';
-import { getLaborMonitoringDetail } from '@/features/labor-monitorings/api/labor-monitoring.api';
+import {
+  deleteLaborMonitoring,
+  getLaborMonitoringDetail,
+} from '@/features/labor-monitorings/api/labor-monitoring.api';
 import {
   AMNIOTIC_FLUID_COLOR_LABELS,
   CONTRACTION_INTENSITY_LABELS,
@@ -28,6 +31,11 @@ import {
   getPatientReligionLabel,
 } from '@/features/patients/constants/patient-options';
 import { formatDate, formatDateTime } from '@/features/patients/lib/patient-format';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/lib/authorization';
+import { getLaborMonitoringEditPath } from '@/features/labor-monitorings/lib/labor-monitoring-path';
+import { DeleteOutlineOutlined, EditOutlined } from '@mui/icons-material';
+import { PERMISSIONS } from '@/features/auth/constants/permissions';
 
 function parseLaborMonitoringId(value: string | undefined) {
   if (!value) {
@@ -300,12 +308,17 @@ function MonitoringDetailCard({ monitoring }: { monitoring: LaborMonitoring }) {
 export function LaborMonitoringDetailPage() {
   const navigate = useNavigate();
   const params = useParams();
+  const { user } = useAuth();
   const laborMonitoringId = parseLaborMonitoringId(params.laborMonitoringId);
+
+  const canUpdateMonitoring = hasPermission(user, PERMISSIONS.MONITORING_UPDATE);
+  const canDeleteMonitoring = hasPermission(user, PERMISSIONS.MONITORING_DELETE);
 
   const [monitoring, setMonitoring] = useState<LaborMonitoring | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(laborMonitoringId !== null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!laborMonitoringId) {
@@ -355,6 +368,49 @@ export function LaborMonitoringDetailPage() {
     setIsLoading(true);
     setErrorMessage(null);
     setReloadKey((currentKey) => currentKey + 1);
+  }
+
+  function handleEdit() {
+    if (!monitoring) {
+      return;
+    }
+
+    void navigate(getLaborMonitoringEditPath(monitoring.id));
+  }
+
+  function handleDelete() {
+    if (!monitoring) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Hapus data Pemantauan Persalinan ini? Data yang sudah dihapus tidak dapat dikembalikan.',
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    void deleteSelectedMonitoring();
+  }
+
+  async function deleteSelectedMonitoring() {
+    if (!monitoring) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setErrorMessage(null);
+
+    try {
+      await deleteLaborMonitoring(monitoring.id);
+
+      void navigate(`/patients/${monitoring.patient_id}`);
+    } catch (error: unknown) {
+      setErrorMessage(getLaborMonitoringErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   if (!laborMonitoringId) {
@@ -414,6 +470,29 @@ export function LaborMonitoringDetailPage() {
           >
             Kembali
           </Button>
+
+          {canUpdateMonitoring && monitoring ? (
+            <Button
+              type="button"
+              variant="secondary"
+              leadingIcon={<EditOutlined aria-hidden="true" fontSize="small" />}
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+          ) : null}
+
+          {canDeleteMonitoring && monitoring ? (
+            <Button
+              type="button"
+              variant="secondary"
+              isLoading={isDeleting}
+              leadingIcon={<DeleteOutlineOutlined aria-hidden="true" fontSize="small" />}
+              onClick={handleDelete}
+            >
+              Hapus
+            </Button>
+          ) : null}
         </div>
       </section>
 
