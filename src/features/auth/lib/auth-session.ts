@@ -3,6 +3,17 @@ import type { AuthSession, AuthUser, Role } from '@/features/auth/types/auth.typ
 
 const AUTH_SESSION_KEY = 'maternity-care.auth-session';
 
+/**
+ * Storage utama untuk auth sekarang memakai sessionStorage.
+ * Ini lebih aman untuk aplikasi klinis karena token hilang saat tab/browser ditutup.
+ */
+const authStorage = window.sessionStorage;
+
+/**
+ * Storage lama dibersihkan agar token lama dari localStorage tidak ikut terbaca.
+ */
+const legacyAuthStorage = window.localStorage;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -40,7 +51,12 @@ function parseAuthSession(value: unknown): AuthSession | null {
     return null;
   }
 
-  if (typeof value.accessToken !== 'string' || typeof value.tokenType !== 'string') {
+  if (
+    typeof value.accessToken !== 'string' ||
+    value.tokenType !== 'Bearer' ||
+    typeof value.expiresAt !== 'string' ||
+    typeof value.idleTimeoutMinutes !== 'number'
+  ) {
     return null;
   }
 
@@ -53,20 +69,30 @@ function parseAuthSession(value: unknown): AuthSession | null {
   return {
     accessToken: value.accessToken,
     tokenType: value.tokenType,
+    expiresAt: value.expiresAt,
+    idleTimeoutMinutes: value.idleTimeoutMinutes,
     user,
   };
 }
 
 export function getStoredAuthSession(): AuthSession | null {
-  const rawValue = window.localStorage.getItem(AUTH_SESSION_KEY);
+  const rawValue = authStorage.getItem(AUTH_SESSION_KEY);
 
   if (!rawValue) {
     return null;
   }
 
   try {
-    return parseAuthSession(JSON.parse(rawValue));
+    const parsedSession = parseAuthSession(JSON.parse(rawValue));
+
+    if (!parsedSession) {
+      clearAuthSession();
+      return null;
+    }
+
+    return parsedSession;
   } catch {
+    clearAuthSession();
     return null;
   }
 }
@@ -75,10 +101,44 @@ export function getStoredAccessToken() {
   return getStoredAuthSession()?.accessToken ?? null;
 }
 
+export function getStoredTokenType() {
+  return getStoredAuthSession()?.tokenType ?? 'Bearer';
+}
+
+export function getStoredAuthSessionExpiresAt() {
+  return getStoredAuthSession()?.expiresAt ?? null;
+}
+
+export function getStoredAuthSessionIdleTimeoutMinutes() {
+  return getStoredAuthSession()?.idleTimeoutMinutes ?? null;
+}
+
+export function isStoredAuthSessionExpired() {
+  const expiresAt = getStoredAuthSessionExpiresAt();
+
+  if (!expiresAt) {
+    return false;
+  }
+
+  const expiresAtTime = new Date(expiresAt).getTime();
+
+  if (Number.isNaN(expiresAtTime)) {
+    return false;
+  }
+
+  return Date.now() >= expiresAtTime;
+}
+
 export function saveAuthSession(session: AuthSession) {
-  window.localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  authStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+
+  /**
+   * Pastikan session lama dari localStorage tidak tersisa.
+   */
+  legacyAuthStorage.removeItem(AUTH_SESSION_KEY);
 }
 
 export function clearAuthSession() {
-  window.localStorage.removeItem(AUTH_SESSION_KEY);
+  authStorage.removeItem(AUTH_SESSION_KEY);
+  legacyAuthStorage.removeItem(AUTH_SESSION_KEY);
 }
