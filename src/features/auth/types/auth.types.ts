@@ -4,6 +4,12 @@ export type Role = 'nurse' | 'admin';
 
 export type AuthRole = Role;
 
+export type AuthErrorReason =
+  | 'unauthenticated'
+  | 'invalid_api_session'
+  | 'session_expired'
+  | 'idle_timeout';
+
 export interface AuthUser {
   id: number;
   name: string;
@@ -15,8 +21,16 @@ export interface AuthUser {
 
 export interface AuthSession {
   accessToken: string;
-  tokenType: string;
+  tokenType: 'Bearer';
+  expiresAt: string;
+  idleTimeoutMinutes: number;
   user: AuthUser;
+}
+
+export interface ApiErrorResponse {
+  message?: string;
+  reason?: AuthErrorReason;
+  errors?: Record<string, string[]>;
 }
 
 export interface NurseLoginPayload {

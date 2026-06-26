@@ -5,7 +5,15 @@ export interface AuthUserDto {
   name: string;
   nim: string | null;
   email: string | null;
-  role: AuthRoleDto;
+
+  /**
+   * Backend lama bisa mengirim role.
+   * Backend baru bisa mengirim roles.
+   * Mapper akan menormalisasi salah satunya menjadi AuthUser.role.
+   */
+  role?: AuthRoleDto | null;
+  roles?: string[];
+
   permissions: string[];
 }
 
@@ -13,7 +21,9 @@ export interface LoginResponseDto {
   message: string;
   data: {
     token: string;
-    token_type: string;
+    token_type: 'Bearer';
+    expires_at: string;
+    idle_timeout_minutes: number;
     user: AuthUserDto;
   };
 }
