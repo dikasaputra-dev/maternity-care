@@ -5,3 +5,7 @@ export function getLaborMonitoringCreatePath(patientId: number) {
 export function getLaborMonitoringDetailPath(laborMonitoringId: number) {
   return `/labor-monitorings/${laborMonitoringId}`;
 }
+
+export function getLaborMonitoringEditPath(laborMonitoringId: number) {
+  return `/labor-monitorings/${laborMonitoringId}/edit`;
+}
