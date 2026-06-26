@@ -1,0 +1,73 @@
+import type {
+  PatientEducation,
+  PatientLocation,
+  PatientReligion,
+} from '@/features/patients/types/patient.types';
+
+export interface PatientCreatorDto {
+  id: number;
+  name: string;
+}
+
+export interface PatientDto {
+  id: number;
+  medical_record_number: string;
+  name: string;
+  date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
+  phone_number: string | null;
+  address: string;
+  location: PatientLocation;
+  created_by: number;
+  creator?: PatientCreatorDto;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PatientListMetaDto {
+  current_page: number;
+  per_page: number;
+  total: number;
+  last_page: number;
+}
+
+export interface PatientListLinksDto {
+  first: string | null;
+  last: string | null;
+  previous: string | null;
+  next: string | null;
+}
+
+export interface PatientListResponseDto {
+  message: string;
+  data: PatientDto[];
+  meta: PatientListMetaDto;
+  links: PatientListLinksDto;
+}
+
+export interface PatientDetailResponseDto {
+  message: string;
+  data: PatientDto;
+}
+
+export interface CreatePatientRequestDto {
+  name: string;
+  date_of_birth: string;
+  religion: PatientReligion;
+  education: PatientEducation;
+  occupation: string;
+  ethnicity: string;
+  phone_number?: string | null;
+  address: string;
+  location: PatientLocation;
+}
+
+export type UpdatePatientRequestDto = Partial<CreatePatientRequestDto>;
+
+export interface PatientMutationResponseDto {
+  message: string;
+  data: PatientDto;
+}
