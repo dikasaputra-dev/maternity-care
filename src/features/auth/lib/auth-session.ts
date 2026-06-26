@@ -113,20 +113,22 @@ export function getStoredAuthSessionIdleTimeoutMinutes() {
   return getStoredAuthSession()?.idleTimeoutMinutes ?? null;
 }
 
-export function isStoredAuthSessionExpired() {
-  const expiresAt = getStoredAuthSessionExpiresAt();
-
-  if (!expiresAt) {
+export function isAuthSessionExpired(session: AuthSession | null | undefined) {
+  if (!session?.expiresAt) {
     return false;
   }
 
-  const expiresAtTime = new Date(expiresAt).getTime();
+  const expiresAtTime = new Date(session.expiresAt).getTime();
 
   if (Number.isNaN(expiresAtTime)) {
     return false;
   }
 
   return Date.now() >= expiresAtTime;
+}
+
+export function isStoredAuthSessionExpired() {
+  return isAuthSessionExpired(getStoredAuthSession());
 }
 
 export function saveAuthSession(session: AuthSession) {
