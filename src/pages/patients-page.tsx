@@ -9,17 +9,13 @@ import { ApiError } from '@/api/api-error';
 import { APP_PATHS } from '@/app/router/route-metadata';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/form-controls';
-import { Badge, Card } from '@/components/ui/surface';
+import { Card } from '@/components/ui/surface';
 import { PERMISSIONS } from '@/features/auth/constants/permissions';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/lib/authorization';
 import { getPatients } from '@/features/patients/api/patient.api';
 import { getPatientLocationLabel } from '@/features/patients/constants/patient-options';
-import {
-  formatDate,
-  getPatientCreatorLabel,
-  getPatientDetailPath,
-} from '@/features/patients/lib/patient-format';
+import { getPatientDetailPath } from '@/features/patients/lib/patient-format';
 import type { PatientListRouteState } from '@/features/patients/types/patient-route-state.types';
 import type { PatientListResult } from '@/features/patients/types/patient.types';
 
@@ -48,6 +44,10 @@ function parsePatientListRouteState(value: unknown): PatientListRouteState {
     shouldRefreshPatients: state.shouldRefreshPatients === true,
     flashMessage: typeof state.flashMessage === 'string' ? state.flashMessage : undefined,
   };
+}
+
+function getPatientListCreatorLabel(patient: { creator: { name: string } | null }) {
+  return patient.creator?.name.trim() ?? '-';
 }
 
 export function PatientsPage() {
@@ -121,6 +121,31 @@ export function PatientsPage() {
     };
   }, [appliedSearch, page, reloadKey]);
 
+  function getPatientAgeLabel(dateOfBirth: string) {
+    const [year, month, day] = dateOfBirth.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      return '-';
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - year;
+
+    const hasHadBirthdayThisYear =
+      today.getMonth() + 1 > month || (today.getMonth() + 1 === month && today.getDate() >= day);
+
+    if (!hasHadBirthdayThisYear) {
+      age -= 1;
+    }
+
+    if (age < 0) {
+      return '-';
+    }
+
+    return `${age} Tahun`;
+  }
+
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -179,16 +204,9 @@ export function PatientsPage() {
 
       <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-brand-600">Data Pasien</p>
-
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
             Daftar pasien
           </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Data pasien diambil langsung dari backend. Tidak ada lagi dummy data atau sessionStorage
-            untuk daftar pasien.
-          </p>
         </div>
 
         {canCreatePatient ? (
@@ -271,7 +289,7 @@ export function PatientsPage() {
               <tr className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <th className="whitespace-nowrap px-4 py-3">Nomor RM</th>
                 <th className="whitespace-nowrap px-4 py-3">Nama</th>
-                <th className="whitespace-nowrap px-4 py-3">Tanggal Lahir</th>
+                <th className="whitespace-nowrap px-4 py-3">Usia</th>{' '}
                 <th className="whitespace-nowrap px-4 py-3">Lokasi</th>
                 <th className="whitespace-nowrap px-4 py-3">Dibuat Oleh</th>
                 <th className="whitespace-nowrap px-4 py-3 text-right">Aksi</th>
@@ -307,15 +325,15 @@ export function PatientsPage() {
                       </td>
 
                       <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        {formatDate(patient.date_of_birth)}
+                        {getPatientAgeLabel(patient.date_of_birth)}
                       </td>
 
                       <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        <Badge tone="neutral">{getPatientLocationLabel(patient.location)}</Badge>
+                        {getPatientLocationLabel(patient.location)}
                       </td>
 
                       <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                        {getPatientCreatorLabel(patient)}
+                        {getPatientListCreatorLabel(patient)}{' '}
                       </td>
 
                       <td className="whitespace-nowrap px-4 py-4 text-right">
