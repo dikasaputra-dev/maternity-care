@@ -3,6 +3,10 @@ import { isPermission } from '@/features/auth/constants/permissions';
 import type { AuthUserDto } from '@/features/auth/types/auth.dto';
 import type { AuthSession, AuthUser, Role } from '@/features/auth/types/auth.types';
 
+type ParsedAuthUserDto = AuthUserDto & {
+  role: Role;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -27,7 +31,7 @@ function resolveRole(value: Record<string, unknown>, fallbackRole?: Role): Role 
   return fallbackRole ?? null;
 }
 
-function parseAuthUserDto(value: unknown, fallbackRole?: Role): AuthUserDto {
+function parseAuthUserDto(value: unknown, fallbackRole?: Role): ParsedAuthUserDto {
   if (!isRecord(value)) {
     throw new ApiError('Format user dari server tidak valid.');
   }
@@ -58,15 +62,23 @@ function parseAuthUserDto(value: unknown, fallbackRole?: Role): AuthUserDto {
   };
 }
 
-function mapAuthUserDto(dto: AuthUserDto): AuthUser {
+function mapAuthUserDto(dto: ParsedAuthUserDto): AuthUser {
   return {
     id: dto.id,
     name: dto.name,
     nim: dto.nim,
     email: dto.email,
-    role: dto.role ?? 'nurse',
+    role: dto.role,
     permissions: dto.permissions.filter(isPermission),
   };
+}
+
+function readToken(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new ApiError('Token login dari server tidak valid.');
+  }
+
+  return value;
 }
 
 function readTokenType(value: unknown): 'Bearer' {
@@ -80,6 +92,12 @@ function readTokenType(value: unknown): 'Bearer' {
 function readExpiresAt(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) {
     throw new ApiError('Waktu kedaluwarsa token dari server tidak valid.');
+  }
+
+  const expiresAtTime = new Date(value).getTime();
+
+  if (Number.isNaN(expiresAtTime)) {
+    throw new ApiError('Format waktu kedaluwarsa token dari server tidak valid.');
   }
 
   return value;
@@ -99,11 +117,6 @@ export function mapLoginResponse(response: unknown, expectedRole: Role): AuthSes
   }
 
   const data = response.data;
-
-  if (typeof data.token !== 'string') {
-    throw new ApiError('Token login dari server tidak valid.');
-  }
-
   const user = mapAuthUserDto(parseAuthUserDto(data.user, expectedRole));
 
   if (user.role !== expectedRole) {
@@ -111,7 +124,7 @@ export function mapLoginResponse(response: unknown, expectedRole: Role): AuthSes
   }
 
   return {
-    accessToken: data.token,
+    accessToken: readToken(data.token),
     tokenType: readTokenType(data.token_type),
     expiresAt: readExpiresAt(data.expires_at),
     idleTimeoutMinutes: readIdleTimeoutMinutes(data.idle_timeout_minutes),
@@ -119,12 +132,12 @@ export function mapLoginResponse(response: unknown, expectedRole: Role): AuthSes
   };
 }
 
-export function mapMeResponse(response: unknown): AuthUser {
+export function mapMeResponse(response: unknown, fallbackRole?: Role): AuthUser {
   if (!isRecord(response) || !isRecord(response.data)) {
     throw new ApiError('Format response /me tidak valid.');
   }
 
-  return mapAuthUserDto(parseAuthUserDto(response.data));
+  return mapAuthUserDto(parseAuthUserDto(response.data, fallbackRole));
 }
 
 export function mapMessageResponse(response: unknown) {
