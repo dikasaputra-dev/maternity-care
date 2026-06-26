@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
+import { ApiError } from '@/api/api-error';
 import { AuthContext, type AuthContextValue } from '@/features/auth/context/auth-context';
 import { onUnauthorized } from '@/features/auth/lib/auth-events';
 import {
   clearAuthSession,
   getStoredAuthSession,
+  isAuthSessionExpired,
   saveAuthSession,
 } from '@/features/auth/lib/auth-session';
 import {
@@ -23,6 +25,17 @@ import type {
 
 interface AuthProviderProps {
   children: ReactNode;
+}
+
+const SESSION_EXPIRED_MESSAGE = 'Sesi Anda telah berakhir. Silakan login kembali.';
+const SESSION_RESTORE_FAILED_MESSAGE = 'Sesi tidak dapat dipulihkan. Silakan login kembali.';
+
+function getSessionRestoreErrorMessage(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) {
+    return error.message || SESSION_EXPIRED_MESSAGE;
+  }
+
+  return SESSION_RESTORE_FAILED_MESSAGE;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -46,6 +59,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!storedSession) {
       setSession(null);
       setLastSyncedAt(null);
+
+      return null;
+    }
+
+    if (isAuthSessionExpired(storedSession)) {
+      clearAuthSession();
+      setSession(null);
+      setLastSyncedAt(null);
+      setAuthNotice(SESSION_EXPIRED_MESSAGE);
 
       return null;
     }
@@ -86,6 +108,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      if (isAuthSessionExpired(storedSession)) {
+        clearAuthSession();
+
+        if (isActive) {
+          setSession(null);
+          setLastSyncedAt(null);
+          setAuthNotice(SESSION_EXPIRED_MESSAGE);
+          setLoading(false);
+        }
+
+        return;
+      }
+
       try {
         const syncedUser = await getAuthenticatedUser(storedSession.user.role);
 
@@ -101,13 +136,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         saveAuthSession(nextSession);
         setSession(nextSession);
         setLastSyncedAt(new Date().toISOString());
-      } catch {
+      } catch (error: unknown) {
         clearAuthSession();
 
         if (isActive) {
           setSession(null);
           setLastSyncedAt(null);
-          setAuthNotice('Sesi berakhir. Silakan login kembali.');
+          setAuthNotice(getSessionRestoreErrorMessage(error));
         }
       } finally {
         if (isActive) {
