@@ -124,11 +124,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    return onUnauthorized(() => {
+    return onUnauthorized(({ message }) => {
       clearAuthSession();
       setSession(null);
       setLastSyncedAt(null);
-      setAuthNotice('Sesi berakhir. Silakan login kembali.');
+      setAuthNotice(message);
     });
   }, []);
 
