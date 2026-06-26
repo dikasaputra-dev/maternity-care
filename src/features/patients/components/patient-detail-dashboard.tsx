@@ -34,6 +34,7 @@ import {
 import { formatDate, formatDateTime } from '@/features/patients/lib/patient-format';
 import type { Patient } from '@/features/patients/types/patient.types';
 import { PatientClinicalFeatureTabs } from '@/features/patients/components/patient-clinical-feature-tabs';
+import { LatestLaborMonitoringSummaryCard } from '@/features/labor-monitorings/components/latest-labor-monitoring-summary-card';
 
 interface PatientDetailDashboardProps {
   patient: Patient;
@@ -378,6 +379,10 @@ export function PatientDetailDashboard({
         patientId={patient.id}
         hasInitialScreening={hasInitialScreening}
         initialScreening={initialScreening}
+      />
+      <LatestLaborMonitoringSummaryCard
+        patientId={patient.id}
+        hasInitialScreening={hasInitialScreening}
       />
     </div>
   );
