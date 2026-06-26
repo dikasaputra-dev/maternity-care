@@ -12,10 +12,13 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import type { AuthRole, AuthUser } from '@/features/auth/types/auth.types';
 import { cn } from '@/lib/cn';
 import { BrandLogo } from '@/components/brand/brand-logo';
+import { CloseOutlined, WarningAmberOutlined } from '@mui/icons-material';
 
 const NIM_PATTERN = /^\d{3}[A-Za-z]{2}\d{5}$/;
+
 interface RedirectState {
   from?: string;
+  message?: string;
 }
 
 export function LoginPage() {
@@ -23,6 +26,13 @@ export function LoginPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const redirectState = location.state as RedirectState | null;
+  const sessionNotice = authNotice ?? redirectState?.message ?? null;
+
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
+
+  const visibleNotice = sessionNotice && dismissedNotice !== sessionNotice ? sessionNotice : null;
 
   const [accountType, setAccountType] = useState<AuthRole>('nurse');
 
@@ -37,11 +47,19 @@ export function LoginPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function clearLoginNotice() {
+    if (sessionNotice) {
+      setDismissedNotice(sessionNotice);
+    }
+
+    clearAuthNotice();
+  }
+
   function resetErrors() {
     setIdentifierError(undefined);
     setPasswordError(undefined);
     setFormError(null);
-    clearAuthNotice();
+    clearLoginNotice();
   }
 
   function changeAccountType(role: AuthRole) {
@@ -61,7 +79,7 @@ export function LoginPage() {
     setIdentifier(value);
     setIdentifierError(undefined);
     setFormError(null);
-    clearAuthNotice();
+    clearLoginNotice();
   }
 
   function mapApiValidationError(error: ApiError) {
@@ -200,12 +218,31 @@ export function LoginPage() {
             </p>
           </div>
 
-          {authNotice ? (
+          {visibleNotice ? (
             <div
-              role="status"
-              className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+              role="alert"
+              className="mt-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
             >
-              {authNotice}
+              <WarningAmberOutlined
+                aria-hidden="true"
+                fontSize="small"
+                className="mt-0.5 shrink-0 text-amber-600"
+              />
+
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-amber-900">Sesi berakhir</p>
+
+                <p className="mt-1 leading-6">{visibleNotice}</p>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Tutup pemberitahuan sesi"
+                onClick={clearLoginNotice}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-amber-700 transition hover:bg-amber-100 hover:text-amber-900"
+              >
+                <CloseOutlined aria-hidden="true" fontSize="small" />
+              </button>
             </div>
           ) : null}
 
@@ -279,7 +316,7 @@ export function LoginPage() {
                 setPassword(event.target.value);
                 setPasswordError(undefined);
                 setFormError(null);
-                clearAuthNotice();
+                clearLoginNotice();
               }}
               placeholder="Masukkan password"
               autoComplete="current-password"
