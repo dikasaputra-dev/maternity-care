@@ -44,7 +44,11 @@ import type {
   LaborMonitoringRiskStatus,
 } from '@/features/labor-monitorings/types/labor-monitoring.types';
 import { formatDateTime } from '@/features/patients/lib/patient-format';
-import { getLaborMonitoringCreatePath } from '@/features/labor-monitorings/lib/labor-monitoring-path';
+import {
+  getLaborMonitoringCreatePath,
+  getLaborMonitoringDetailPath,
+} from '@/features/labor-monitorings/lib/labor-monitoring-path';
+import { VisibilityOutlined } from '@mui/icons-material';
 
 type ClinicalFeatureTabId =
   | 'initial-screening'
@@ -525,6 +529,7 @@ function LaborMonitoringTable({
   const { user } = useAuth();
 
   const canCreateMonitoring = hasPermission(user, PERMISSIONS.MONITORING_CREATE);
+  const canViewMonitoring = hasPermission(user, PERMISSIONS.MONITORING_VIEW);
 
   const [result, setResult] = useState<LaborMonitoringCollectionResult | null>(null);
   const [page, setPage] = useState(1);
@@ -593,6 +598,10 @@ function LaborMonitoringTable({
 
   function handleCreateMonitoring() {
     void navigate(getLaborMonitoringCreatePath(patientId));
+  }
+
+  function handleOpenMonitoringDetail(laborMonitoringId: number) {
+    void navigate(getLaborMonitoringDetailPath(laborMonitoringId));
   }
 
   if (!hasInitialScreening) {
@@ -666,6 +675,7 @@ function LaborMonitoringTable({
                 <th className="px-4 py-3">Ketuban</th>
                 <th className="px-4 py-3">Urine</th>
                 <th className="px-4 py-3">Rekomendasi</th>
+                {canViewMonitoring ? <th className="px-4 py-3">Aksi</th> : null}
               </tr>
             </thead>
 
@@ -737,6 +747,18 @@ function LaborMonitoringTable({
                   </td>
 
                   <td className="min-w-80 px-4 py-4 text-slate-600">{monitoring.recommendation}</td>
+                  {canViewMonitoring ? (
+                    <td className="whitespace-nowrap px-4 py-4">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        leadingIcon={<VisibilityOutlined aria-hidden="true" fontSize="small" />}
+                        onClick={() => handleOpenMonitoringDetail(monitoring.id)}
+                      >
+                        Detail
+                      </Button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
