@@ -1,7 +1,10 @@
+import type { AuthErrorReason } from '@/features/auth/types/auth.types';
+
 export type ApiValidationErrors = Record<string, string[]>;
 
 export class ApiError extends Error {
   status?: number;
+  reason?: AuthErrorReason;
   errors: ApiValidationErrors;
   validationErrors: ApiValidationErrors;
 
@@ -9,6 +12,7 @@ export class ApiError extends Error {
     message: string,
     options?: {
       status?: number;
+      reason?: AuthErrorReason;
       errors?: ApiValidationErrors;
     },
   ) {
@@ -16,6 +20,7 @@ export class ApiError extends Error {
 
     this.name = 'ApiError';
     this.status = options?.status;
+    this.reason = options?.reason;
     this.errors = options?.errors ?? {};
     this.validationErrors = this.errors;
   }
@@ -49,6 +54,19 @@ function parseValidationErrors(value: unknown): ApiValidationErrors | undefined 
   return Object.keys(errors).length > 0 ? errors : undefined;
 }
 
+function parseAuthErrorReason(value: unknown): AuthErrorReason | undefined {
+  if (
+    value === 'unauthenticated' ||
+    value === 'invalid_api_session' ||
+    value === 'session_expired' ||
+    value === 'idle_timeout'
+  ) {
+    return value;
+  }
+
+  return undefined;
+}
+
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) {
     return error;
@@ -65,7 +83,6 @@ export function toApiError(error: unknown): ApiError {
   }
 
   const status = typeof response.status === 'number' ? response.status : undefined;
-
   const data = response.data;
 
   if (!isRecord(data)) {
@@ -79,6 +96,7 @@ export function toApiError(error: unknown): ApiError {
 
   return new ApiError(message, {
     status,
+    reason: parseAuthErrorReason(data.reason),
     errors: parseValidationErrors(data.errors),
   });
 }
