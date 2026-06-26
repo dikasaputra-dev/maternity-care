@@ -4,6 +4,7 @@ import type {
   CreateLaborMonitoringPayload,
   FetalHeadDescent,
   FetalMovement,
+  LaborMonitoring,
   LaborMonitoringFieldErrors,
   MembraneStatus,
   UrineAcetone,
@@ -72,6 +73,61 @@ export const DEFAULT_LABOR_MONITORING_FORM_STATE: LaborMonitoringCreateFormState
 
   notes: '',
 };
+
+function toDatetimeLocalValue(value: string | null) {
+  if (!value) {
+    return '';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const pad = (number: number) => String(number).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+export function mapLaborMonitoringToFormState(
+  monitoring: LaborMonitoring,
+): LaborMonitoringCreateFormState {
+  return {
+    systolic_bp: String(monitoring.systolic_bp),
+    diastolic_bp: String(monitoring.diastolic_bp),
+    pulse_rate: String(monitoring.pulse_rate),
+    respiratory_rate: String(monitoring.respiratory_rate),
+    temperature_c: String(monitoring.temperature_c),
+    oxygen_saturation: String(monitoring.oxygen_saturation),
+
+    fetal_heart_rate: String(monitoring.fetal_heart_rate),
+    fetal_movement: monitoring.fetal_movement,
+
+    contraction_frequency_per_10_minutes: String(monitoring.contraction_frequency_per_10_minutes),
+    contraction_duration_seconds: String(monitoring.contraction_duration_seconds),
+    contraction_intensity: monitoring.contraction_intensity,
+
+    cervical_dilation_cm: String(monitoring.cervical_dilation_cm),
+    fetal_head_descent: monitoring.fetal_head_descent,
+
+    membrane_status: monitoring.membrane_status,
+    membrane_rupture_at: toDatetimeLocalValue(monitoring.membrane_rupture_at),
+    amniotic_fluid_color: monitoring.amniotic_fluid_color ?? '',
+
+    urine_volume_ml: String(monitoring.urine_volume_ml),
+    urine_protein: monitoring.urine_protein,
+    urine_acetone: monitoring.urine_acetone,
+
+    notes: monitoring.notes ?? '',
+  };
+}
 
 function parseRequiredNumber(
   value: string,
